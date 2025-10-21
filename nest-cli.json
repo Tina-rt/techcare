@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/techcare/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/techcare/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/techcare",
+  "projects": {
+    "gestion-produit": {
+      "type": "application",
+      "root": "apps/gestion-produit",
+      "entryFile": "main",
+      "sourceRoot": "apps/gestion-produit/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gestion-produit/tsconfig.app.json"
+      }
+    },
+    "techcare": {
+      "type": "application",
+      "root": "apps/techcare",
+      "entryFile": "main",
+      "sourceRoot": "apps/techcare/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/techcare/tsconfig.app.json"
+      }
+    },
+    "utilisateur": {
+      "type": "application",
+      "root": "apps/utilisateur",
+      "entryFile": "main",
+      "sourceRoot": "apps/utilisateur/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/utilisateur/tsconfig.app.json"
+      }
+    }
+  }
+}

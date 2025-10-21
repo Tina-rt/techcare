@@ -1,0 +1,21 @@
+# GET http://localhost:3000/categories
+
+# POST http://localhost:3000/categories
+# Content-Type: application/json
+
+# {
+#   "nom": "New Category",
+#   "description": "Category Description"
+# }
+
+# PATCH http://localhost:3000/categories/68f78cc2b5ca57b4c9d9e6f7
+# Content-Type: application/json
+
+# {
+#   "nom": "Updated Category Name",
+#   "description": "Updated Description"
+# }
+
+# DELETE http://localhost:3000/categories/68f78c04204dde2839a07769
+
+

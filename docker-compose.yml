@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  produits_db:
+    image: mongo:latest
+    container_name: produits_db
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - produits_db_data:/data/db
+    networks:
+      - produits_network
+
+volumes:
+  produits_db_data:
+
+networks:
+  produits_network:
+    driver: bridge
