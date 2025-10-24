@@ -6,7 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CreerProduitDto {
+export class CreateProductDto {
   @IsString({
     message: 'Le nom du produit doit être une chaîne de caractères.',
   })

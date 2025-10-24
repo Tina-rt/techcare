@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-export type ProduitDocument = HydratedDocument<Produit>;
+export type ProductDocument = HydratedDocument<Product>;
 
 @Schema()
-export class Produit {
+export class Product {
   @Prop({ required: true })
   nom: string;
 
@@ -45,18 +45,18 @@ export class Produit {
   updatedAt: Date;
 }
 
-export const ProduitSchema = SchemaFactory.createForClass(Produit);
+export const ProductSchema = SchemaFactory.createForClass(Product);
 
-ProduitSchema.index({
+ProductSchema.index({
   nom: 'text',
   description: 'text',
   marque: 'text',
   caracteristiques: 'text',
 });
-ProduitSchema.index({ prix: 1 });
-ProduitSchema.index({ categorie: 1 });
+ProductSchema.index({ prix: 1 });
+ProductSchema.index({ categorie: 1 });
 
-ProduitSchema.statics.search = function (query: string, filters: any = {}) {
+ProductSchema.statics.search = function (query: string, filters: any = {}) {
   const searchQuery: any = {};
   if (query) {
     searchQuery.$text = { $search: query };
