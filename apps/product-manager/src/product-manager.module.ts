@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { GestionProduitController } from './gestion-produit.controller';
-import { GestionProduitService } from './gestion-produit.service';
-import { ProduitModule } from './produit/produit.module';
+import { ProductManagerController } from './product-manager.controller';
+import { ProductManagerService } from './product-manager.service';
+import { ProductModule } from './produit/product.module';
 import { StockModule } from './stock/stock.module';
 import { CategoriesModule } from './categories/categories.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -11,11 +11,11 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forRoot(
       'mongodb://root:example@localhost:27017/gestion-produit?authSource=admin',
     ),
-    ProduitModule,
+    ProductModule,
     StockModule,
     CategoriesModule,
   ],
-  controllers: [GestionProduitController],
-  providers: [GestionProduitService],
+  controllers: [ProductManagerController],
+  providers: [ProductManagerService],
 })
-export class GestionProduitModule {}
+export class ProductManagerModule {}

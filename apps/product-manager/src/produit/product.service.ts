@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Produit, ProduitDocument } from './schemas/produit.schema';
+import { Product, ProductDocument } from './schemas/product.schema';
 import { Model } from 'mongoose';
-import { CreerProduitDto } from './dtos/creer-produit.dto';
+import { CreateProductDto } from './dtos/create-product.dto';
 import { ProductFilters } from './types/filter.type';
 
 @Injectable()
-export class ProduitService {
+export class ProductService {
   constructor(
-    @InjectModel(Produit.name) private produitModel: Model<ProduitDocument>,
+    @InjectModel(Product.name) private produitModel: Model<ProductDocument>,
   ) {}
 
   async findAll(
     filters: ProductFilters = {},
     populateCategories: boolean = true,
-  ): Promise<Produit[]> {
+  ): Promise<Product[]> {
     const query: any = {};
     let baseQuery = this.produitModel.find(query);
     if (populateCategories) {
@@ -26,25 +26,25 @@ export class ProduitService {
     return baseQuery.exec();
   }
 
-  async findById(id: string): Promise<ProduitDocument | null> {
+  async findById(id: string): Promise<ProductDocument | null> {
     return this.produitModel.findById(id).exec();
   }
 
-  async createProduit(produitData: CreerProduitDto): Promise<Produit> {
-    const createdProduit = new this.produitModel(produitData);
-    return createdProduit.save();
+  async createProduct(produitData: CreateProductDto): Promise<Product> {
+    const createdProduct = new this.produitModel(produitData);
+    return createdProduct.save();
   }
 
   async updateById(
     id: string,
-    updateProduitDto: CreerProduitDto,
-  ): Promise<ProduitDocument | null> {
+    updateProductDto: CreateProductDto,
+  ): Promise<ProductDocument | null> {
     return this.produitModel
-      .findByIdAndUpdate(id, updateProduitDto, { new: true })
+      .findByIdAndUpdate(id, updateProductDto, { new: true })
       .exec();
   }
 
-  async deleteById(id: string): Promise<ProduitDocument | null> {
+  async deleteById(id: string): Promise<ProductDocument | null> {
     return this.produitModel.findByIdAndDelete(id).exec();
   }
 }

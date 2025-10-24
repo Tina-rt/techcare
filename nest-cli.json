@@ -10,13 +10,13 @@
   "monorepo": true,
   "root": "apps/techcare",
   "projects": {
-    "gestion-produit": {
+    "product-manager": {
       "type": "application",
-      "root": "apps/gestion-produit",
+      "root": "apps/product-manager",
       "entryFile": "main",
-      "sourceRoot": "apps/gestion-produit/src",
+      "sourceRoot": "apps/product-manager/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/gestion-produit/tsconfig.app.json"
+        "tsConfigPath": "apps/product-manager/tsconfig.app.json"
       }
     },
     "techcare": {
