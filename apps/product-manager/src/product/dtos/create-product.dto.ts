@@ -8,10 +8,10 @@ import {
 
 export class CreateProductDto {
   @IsString({
-    message: 'Le nom du produit doit être une chaîne de caractères.',
+    message: 'Le name du produit doit être une chaîne de caractères.',
   })
-  @IsNotEmpty({ message: 'Le nom du produit est obligatoire.' })
-  nom: string;
+  @IsNotEmpty({ message: 'Le name du produit est obligatoire.' })
+  name: string;
 
   @IsString({
     message: 'La description du produit doit être une chaîne de caractères.',
@@ -19,23 +19,23 @@ export class CreateProductDto {
   description: string;
 
   @IsNumber()
-  prix: number;
+  price: number;
 
   @IsNumber()
-  quantite: number;
+  quantity: number;
 
   @IsString()
-  marque: string;
+  brand: string;
 
   @IsArray()
   @IsString({ each: true })
-  categorie: string[]; // Array of category IDs
+  category: string[]; // Array of category IDs
 
   @IsString()
-  numeroSerie: string;
+  serialNumber: string;
 
   @IsString()
-  caracteristiques: string;
+  characteristic: string;
 
   @IsNumber()
   reduction: number;
@@ -44,5 +44,5 @@ export class CreateProductDto {
   tva: number;
 
   @IsBoolean()
-  actif: boolean;
+  active: boolean;
 }

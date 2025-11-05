@@ -10,6 +10,15 @@
   "monorepo": true,
   "root": "apps/techcare",
   "projects": {
+    "file-manager": {
+      "type": "application",
+      "root": "apps/file-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/file-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/file-manager/tsconfig.app.json"
+      }
+    },
     "product-manager": {
       "type": "application",
       "root": "apps/product-manager",

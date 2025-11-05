@@ -13,14 +13,14 @@ export class ProductService {
 
   async findAll(
     filters: ProductFilters = {},
-    populateCategories: boolean = true,
+    populateCategorys: boolean = true,
   ): Promise<Product[]> {
     const query: any = {};
     let baseQuery = this.produitModel.find(query);
-    if (populateCategories) {
+    if (populateCategorys) {
       baseQuery = baseQuery.populate({
-        path: 'categorie',
-        select: 'nom description',
+        path: 'category',
+        select: 'name description',
       });
     }
     return baseQuery.exec();

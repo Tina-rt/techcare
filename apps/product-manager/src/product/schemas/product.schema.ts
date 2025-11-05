@@ -6,28 +6,28 @@ export type ProductDocument = HydratedDocument<Product>;
 @Schema()
 export class Product {
   @Prop({ required: true })
-  nom: string;
+  name: string;
 
   @Prop()
   description: string;
 
   @Prop({ required: true })
-  prix: number;
+  price: number;
 
   @Prop({ required: true })
-  quantite: number;
+  quantity: number;
 
   @Prop()
-  marque: string;
+  brand: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Categorie', default: [], index: true })
-  categorie: Types.ObjectId[];
-
-  @Prop()
-  numeroSerie: string;
+  @Prop({ type: [Types.ObjectId], ref: 'Category', default: [], index: true })
+  category: Types.ObjectId[];
 
   @Prop()
-  caracteristiques: string;
+  serialNumber: string;
+
+  @Prop()
+  characteristic: string;
 
   @Prop()
   reduction: number;
@@ -36,7 +36,7 @@ export class Product {
   tva: number;
 
   @Prop()
-  actif: boolean;
+  active: boolean;
 
   @Prop()
   createdAt: Date;
@@ -48,31 +48,31 @@ export class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 ProductSchema.index({
-  nom: 'text',
+  name: 'text',
   description: 'text',
-  marque: 'text',
-  caracteristiques: 'text',
+  brand: 'text',
+  characteristic: 'text',
 });
-ProductSchema.index({ prix: 1 });
-ProductSchema.index({ categorie: 1 });
+ProductSchema.index({ price: 1 });
+ProductSchema.index({ category: 1 });
 
 ProductSchema.statics.search = function (query: string, filters: any = {}) {
   const searchQuery: any = {};
   if (query) {
     searchQuery.$text = { $search: query };
   }
-  if (filters.categorie && filters.categorie.length > 0) {
-    searchQuery.categorie = { $in: filters.categorie };
+  if (filters.category && filters.category.length > 0) {
+    searchQuery.category = { $in: filters.category };
   }
   if (filters.minPrice) {
-    searchQuery.prix = { ...searchQuery.prix, $gte: filters.minPrice };
+    searchQuery.price = { ...searchQuery.price, $gte: filters.minPrice };
   }
   if (filters.maxPrice) {
-    searchQuery.prix = { ...searchQuery.prix, $lte: filters.maxPrice };
+    searchQuery.price = { ...searchQuery.price, $lte: filters.maxPrice };
   }
 
   if (filters.isActive !== undefined) {
-    searchQuery.actif = filters.isActive;
+    searchQuery.active = filters.isActive;
   }
 
   return this.find(searchQuery);
