@@ -1,14 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { Model } from 'mongoose';
 import { CreateProductDto } from './dtos/create-product.dto';
 import { ProductFilters } from './types/filter.type';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private produitModel: Model<ProductDocument>,
+    @Inject('FILE_MANAGER_SERVICE') private fileManagerClient: ClientProxy,
   ) {}
 
   async findAll(
@@ -30,8 +33,33 @@ export class ProductService {
     return this.produitModel.findById(id).exec();
   }
 
-  async createProduct(produitData: CreateProductDto): Promise<Product> {
-    const createdProduct = new this.produitModel(produitData);
+  async createProduct(
+    produitData: CreateProductDto,
+    image?: Express.Multer.File,
+  ): Promise<Product | any> {
+    let urlImage;
+    const prfound = await this.produitModel
+      .findOne({ serialNumber: produitData.serialNumber })
+      .exec();
+    if (prfound) {
+      throw new ConflictException(
+        'Product with this serial number already exists',
+      );
+    }
+    try {
+      const { url } = await lastValueFrom(
+        this.fileManagerClient.send('upload_file', image),
+      );
+      urlImage = url;
+    } catch (error) {
+      console.log('Erreur uploading images', error);
+    }
+
+    const createdProduct = new this.produitModel({
+      ...produitData,
+      image: urlImage ?? '',
+    });
+    // return { data: 'ok' };
     return createdProduct.save();
   }
 

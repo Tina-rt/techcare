@@ -5,6 +5,10 @@ export default () => ({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     endpoint: `https://s3.${process.env.AWS_REGION}.amazonaws.com`,
 
+    cloudfront: {
+      url: process.env.AWS_CLOUDFRONT_URL + '/' || '',
+    },
+
     s3: {
       bucketName: process.env.AWS_S3_BUCKET_NAME || 'my-default-bucket',
       baseUrl: `https://${process.env.AWS_S3_BUCKET_NAME || 'my-default-bucket'}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/`,

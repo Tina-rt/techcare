@@ -40,4 +40,8 @@ export class AwsConfigService {
   getBaseUrl(): string {
     return this.configService.get('aws.s3.baseUrl') || '';
   }
+
+  getCloudfrontUrl(): string {
+    return this.configService.get('aws.cloudfront.url') || '';
+  }
 }

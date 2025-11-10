@@ -11,6 +11,9 @@ export class Product {
   @Prop()
   description: string;
 
+  @Prop()
+  image: string;
+
   @Prop({ required: true })
   price: number;
 
@@ -23,7 +26,7 @@ export class Product {
   @Prop({ type: [Types.ObjectId], ref: 'Category', default: [], index: true })
   category: Types.ObjectId[];
 
-  @Prop()
+  @Prop({ unique: true, required: true })
   serialNumber: string;
 
   @Prop()

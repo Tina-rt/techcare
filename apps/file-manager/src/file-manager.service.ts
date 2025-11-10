@@ -3,6 +3,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { AwsConfigService } from './config/aws.config';
 import { ConfigService } from '@nestjs/config';
 import { UploadResponse } from './types/file.interface';
+import { Readable } from 'stream';
 
 @Injectable()
 export class FileManagerService {
@@ -29,19 +30,27 @@ export class FileManagerService {
       const key = this.generateFileKey(filename, folder);
       this.validateFileType(file.mimetype);
 
+      console.log('Uploading file ', filename);
+
+      const buffer = Buffer.isBuffer(file.buffer)
+        ? file.buffer
+        : Buffer.from(file.buffer);
+
       const command = new PutObjectCommand({
         Bucket: this.awsConfig.getS3Bucket(),
         Key: key,
-        Body: file.buffer,
+        Body: buffer,
         ContentType: file.mimetype,
+        ContentLength: buffer.length,
         Metadata: metadata,
+        // ChecksumAlgorithm: undefined,
         // ServerSideEncryption: 'AES256',
       });
 
       const result = await this.s3Client.send(command);
       return {
         key,
-        url: `${this.awsConfig.getBaseUrl()}${key}`,
+        url: `${this.awsConfig.getCloudfrontUrl()}${key}`,
         etag: result.ETag || '',
         versionId: result.VersionId,
       };

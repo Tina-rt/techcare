@@ -1,8 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { FileManagerModule } from './file-manager.module';
+import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(FileManagerModule);
-  await app.listen(process.env.port ?? 3000);
+  const app = await NestFactory.createMicroservice(FileManagerModule, {
+    transport: Transport.RMQ,
+    options: {
+      urls: ['amqp://admin:admin@localhost:5672'],
+      queue: 'file_manager_queue',
+      queueOptions: {
+        durable: false,
+      },
+    },
+  });
+  await app.listen();
 }
 bootstrap();
