@@ -10,6 +10,15 @@
   "monorepo": true,
   "root": "apps/techcare",
   "projects": {
+    "database": {
+      "type": "library",
+      "root": "libs/database",
+      "entryFile": "index",
+      "sourceRoot": "libs/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database/tsconfig.lib.json"
+      }
+    },
     "file-manager": {
       "type": "application",
       "root": "apps/file-manager",
@@ -17,6 +26,24 @@
       "sourceRoot": "apps/file-manager/src",
       "compilerOptions": {
         "tsConfigPath": "apps/file-manager/tsconfig.app.json"
+      }
+    },
+    "inventory-manager": {
+      "type": "application",
+      "root": "apps/inventory-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/inventory-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/inventory-manager/tsconfig.app.json"
+      }
+    },
+    "notification-manager": {
+      "type": "application",
+      "root": "apps/notification-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-manager/tsconfig.app.json"
       }
     },
     "product-manager": {
