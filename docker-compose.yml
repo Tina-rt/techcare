@@ -9,8 +9,8 @@ services:
       - '5672:5672'
       - '15672:15672'
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     networks:
       - techcare_network
 
@@ -18,10 +18,10 @@ services:
     image: mongo:latest
     container_name: techcare_mongodb
     ports:
-      - '27017:27017'
+      - '27018:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -33,13 +33,13 @@ services:
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: techcare
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d techcare"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -57,7 +57,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -73,6 +73,8 @@ services:
       - '4000:4000'
     depends_on:
       - rabbitmq
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -91,7 +93,8 @@ services:
       db-migrate:
         condition: service_completed_successfully
     environment:
-      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -105,6 +108,9 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    environment:
+      - MONGODB_URI=${MONGODB_URI_PRODUCT_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -123,7 +129,8 @@ services:
       db-migrate:
         condition: service_completed_successfully
     environment:
-      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -136,6 +143,10 @@ services:
     container_name: techcare_order
     depends_on:
       - rabbitmq
+      - mongodb
+    environment:
+      - MONGODB_URI=${MONGODB_URI_ORDER_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -148,6 +159,8 @@ services:
     container_name: techcare_payment
     depends_on:
       - rabbitmq
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -164,7 +177,8 @@ services:
       db-migrate:
         condition: service_completed_successfully
     environment:
-      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 
@@ -177,6 +191,24 @@ services:
     container_name: techcare_file
     depends_on:
       - rabbitmq
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+    networks:
+      - techcare_network
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: cart-manager
+    container_name: techcare_cart
+    depends_on:
+      - rabbitmq
+      - mongodb
+    environment:
+      - MONGODB_URI=${MONGODB_URI_CART_DOCKER}
+      - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
 

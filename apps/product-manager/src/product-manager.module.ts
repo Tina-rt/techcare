@@ -6,15 +6,20 @@ import { StockModule } from './stock/stock.module';
 import { CategorysModule } from './category/category.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     ClientsModule.register([
       {
         name: 'FILE_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin@localhost:5672'],
+          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'file_manager_queue',
           queueOptions: {
             durable: false,
@@ -22,9 +27,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         },
       },
     ]),
-    MongooseModule.forRoot(
-      'mongodb://root:example@localhost:27017/product-manager?authSource=admin',
-    ),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+    }),
     ProductModule,
     StockModule,
     CategorysModule,
