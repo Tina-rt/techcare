@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
+COPY drizzle.config.ts ./
 
 # Install dependencies
 RUN npm install
