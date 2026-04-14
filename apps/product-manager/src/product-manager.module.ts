@@ -21,7 +21,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         options: {
           urls: [
             process.env.RABBITMQ_URL ||
-              process.env.RABBITMQ_URL ||
               'amqp://admin:admin@localhost:5672',
           ],
           queue: 'file_manager_queue',

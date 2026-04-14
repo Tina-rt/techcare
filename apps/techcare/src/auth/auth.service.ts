@@ -1,7 +1,12 @@
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, defaultIfEmpty } from 'rxjs';
 import * as bcrypt from 'bcrypt';
 import type { User, NewUser } from '@app/database';
 
@@ -21,7 +26,9 @@ export class AuthService {
   ) {
     // Check if user exists via User microservice
     const existing = await lastValueFrom(
-      this.userClient.send<User>('find_user_by_email', email),
+      this.userClient
+        .send<User>('find_user_by_email', email)
+        .pipe(defaultIfEmpty(null)),
     );
     if (existing) {
       throw new ConflictException('Email already in use');
@@ -57,22 +64,27 @@ export class AuthService {
     },
   ) {
     return lastValueFrom(
-      this.userClient.send('update_profile', { id: userId, data }),
+      this.userClient
+        .send('update_profile', { id: userId, data })
+        .pipe(defaultIfEmpty(null)),
     );
   }
 
   async signin(email: string, password: string) {
+    console.log('Signin...');
     // Find user by email via User microservice
     const found = await lastValueFrom(
-      this.userClient.send<User>('find_user_by_email', email),
+      this.userClient
+        .send<User>('find_user_by_email', email)
+        .pipe(defaultIfEmpty(null)),
     );
     if (!found) {
-      return { message: 'Invalid credentials' };
+      throw new UnauthorizedException('Invalid credentials');
     }
     // Compare password
     const valid = await bcrypt.compare(password, found.password);
     if (!valid) {
-      return { message: 'Invalid credentials' };
+      throw new UnauthorizedException('Invalid credentials');
     }
     // Return JWT
     const payload = { sub: found.id, email: found.email };
