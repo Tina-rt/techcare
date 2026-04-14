@@ -13,7 +13,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         name: 'CART_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin@localhost:5672'],
+          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'cart_manager_queue',
           queueOptions: {
             durable: false,
@@ -24,7 +24,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         name: 'NOTIFICATION_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin@localhost:5672'],
+          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'notification_manager_queue',
           queueOptions: {
             durable: false,
@@ -35,7 +35,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         name: 'PRODUCT_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://admin:admin@localhost:5672'],
+          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'product_manager_queue',
           queueOptions: {
             durable: false,
