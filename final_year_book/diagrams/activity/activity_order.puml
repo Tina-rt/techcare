@@ -1,0 +1,43 @@
+@startuml activity_order
+!theme plain
+skinparam conditionStyle diamond
+skinparam shadowing false
+
+title Diagramme d'activité : Processus de Commande
+
+start
+:Client consulte le catalogue;
+:Recherche d'un produit spécifique;
+if (Produit trouvé ?) then (oui)
+  :Ajouter au panier;
+  :Vérifier le contenu du panier;
+  if (Valider la commande ?) then (oui)
+    :S'authentifier (JWT);
+    :Saisir l'adresse de livraison;
+    :Sélectionner le mode de paiement;
+    
+    partition "Traitement Commande (Saga)" {
+      :Vérification de la disponibilité;
+      if (Stock disponible ?) then (oui)
+        :Réservation du stock;
+        :Procéder au paiement (Stripe);
+        if (Paiement réussi ?) then (oui)
+          :Confirmer la commande;
+          :Envoyer notification de succès;
+          stop
+        else (non)
+          :Libérer la réservation de stock;
+          :Afficher erreur de paiement;
+        endif
+      else (non)
+        :Afficher rupture de stock;
+      endif
+    }
+  else (non)
+    :Continuer les achats;
+  endif
+else (non)
+  :Afficher "Produit non trouvé";
+endif
+stop
+@enduml

@@ -1,0 +1,16 @@
+\babel@toc {french}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Organigramme de l'INSI}}{3}{figure.0.1}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Diagramme de cas d'utilisation du système Techcare}}{13}{figure.0.2}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Diagramme de classe de l'architecture microservices}}{18}{figure.0.3}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Diagramme de séquence de l'authentification utilisateur}}{22}{figure.0.4}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Diagramme d'activité du processus de commande}}{24}{figure.0.5}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Diagramme de séquence du pattern Saga avec compensation}}{25}{figure.0.6}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Structure globale (Monorepo)}}{27}{figure.0.7}%
+\contentsline {figure}{\numberline {8}{\ignorespaces Structure d'un service}}{27}{figure.0.8}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Capture d'écran Postman : Test de réussite de l'authentification}}{46}{figure.0.9}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Capture d'écran Postman : Test de refus d'accès (401 Unauthorized)}}{47}{figure.0.10}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Capture d'écran Postman : Récupération de la liste des produits}}{48}{figure.0.11}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Capture d'écran Postman : Création réussie d'un produit (201 Created)}}{49}{figure.0.12}%
+\contentsline {figure}{\numberline {13}{\ignorespaces Interface RabbitMQ : Pic d'activité sur la file product\_manager\_queue}}{50}{figure.0.13}%
+\contentsline {figure}{\numberline {14}{\ignorespaces Capture d'écran Postman : Rejet d'une requête mal formée (400 Bad Request)}}{51}{figure.0.14}%
+\contentsline {figure}{\numberline {15}{\ignorespaces Interface S3 : Validation de l'upload de l'image du produit}}{52}{figure.0.15}%

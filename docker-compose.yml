@@ -1,33 +1,152 @@
 version: '3.8'
 
 services:
+  # Infrastructure
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: techcare_rabbitmq
     ports:
       - '5672:5672'
       - '15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
-    
-  
-  produits_db:
+    networks:
+      - techcare_network
+
+  mongodb:
     image: mongo:latest
-    container_name: produits_db
+    container_name: techcare_mongodb
     ports:
       - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
-      - produits_db_data:/data/db
+      - mongodb_data:/data/db
     networks:
-      - produits_network
+      - techcare_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: techcare_postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: techcare
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - techcare_network
+
+  # Microservices
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: techcare
+    container_name: techcare_gateway
+    ports:
+      - '4000:4000'
+    depends_on:
+      - rabbitmq
+    networks:
+      - techcare_network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: user
+    container_name: techcare_user
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - techcare_network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: product-manager
+    container_name: techcare_product
+    depends_on:
+      - rabbitmq
+      - mongodb
+    networks:
+      - techcare_network
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: inventory-manager
+    container_name: techcare_inventory
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - techcare_network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: order-manager
+    container_name: techcare_order
+    depends_on:
+      - rabbitmq
+    networks:
+      - techcare_network
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: payment-manager
+    container_name: techcare_payment
+    depends_on:
+      - rabbitmq
+    networks:
+      - techcare_network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: notification-manager
+    container_name: techcare_notification
+    depends_on:
+      - rabbitmq
+    networks:
+      - techcare_network
+
+  file-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: file-manager
+    container_name: techcare_file
+    depends_on:
+      - rabbitmq
+    networks:
+      - techcare_network
 
 volumes:
-  produits_db_data:
+  mongodb_data:
+  postgres_data:
 
 networks:
-  produits_network:
+  techcare_network:
     driver: bridge

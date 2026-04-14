@@ -10,23 +10,44 @@ import {
 import { FileManagerService } from './file-manager.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import type { RmqFilePayload } from './types/rmq-payload.interface';
 
 @Controller()
 export class FileManagerController {
   constructor(private readonly fileManagerService: FileManagerService) {}
 
   @MessagePattern('test_file_manager')
-  async testFileManager(data: any) {
-    console.log('Received test_file_manager message with data:', data);
-    return { message: 'File Manager is operational', data };
+  testFileManager() {
+    return { message: 'File Manager is operational' };
   }
 
   @MessagePattern('upload_file')
-  async handleUploadFile(data: any) {
-    console.log('Received upload_file message with data:', data);
-    const file = data as Express.Multer.File;
-    return this.fileManagerService.uploadFile(file, file.originalname);
+  async handleUploadFile(@Payload() data: RmqFilePayload) {
+    console.log('Received upload_file message with metadata:', {
+      originalname: data.originalname,
+      mimetype: data.mimetype,
+      folder: data.folder,
+    });
+
+    // Construct a pseudo-file object for the service
+    const rawBuffer = (data.buffer as any)?.data || data.buffer;
+    const buffer = Buffer.isBuffer(rawBuffer)
+      ? rawBuffer
+      : Buffer.from(rawBuffer);
+
+    const file = {
+      buffer: buffer,
+      originalname: data.originalname,
+      mimetype: data.mimetype,
+      size: data.size,
+    } as Express.Multer.File;
+
+    return this.fileManagerService.uploadFile(
+      file,
+      file.originalname,
+      data.folder,
+    );
   }
 
   @Get('test')

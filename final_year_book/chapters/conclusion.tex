@@ -1,0 +1,37 @@
+\thispagestyle{normalpage}
+
+\begin{center}
+    \large \textbf{CONCLUSION GÉNÉRALE}
+\end{center}
+\addcontentsline{toc}{chapter}{CONCLUSION GÉNÉRALE}
+\label{page:conclusion}
+
+\vspace{0.5cm}
+
+Ce mémoire avait pour objectif de répondre à une problématique centrale : comment faire évoluer une plateforme pharmaceutique comme Techcare, confrontée aux limites structurelles d'une architecture monolithique, afin de garantir la scalabilité, la résilience et la maintenabilité requises par sa croissance ?
+
+\vspace{0.3cm}
+
+Pour y répondre, nous avons adopté une démarche scientifique et progressive. Le premier chapitre a posé le contexte du projet et les exigences fonctionnelles et non-fonctionnelles. Le deuxième chapitre a fourni les fondements théoriques indispensables à toute architecture distribuée — le théorème CAP, les patterns de résilience, le Domain-Driven Design — et a abouti à une conception rigoureuse de l'architecture cible. Le troisième chapitre a concrétisé cette conception en une implémentation technique avec NestJS, RabbitMQ, Docker et les services cloud AWS. Enfin, le quatrième chapitre a offert un regard critique sur les résultats obtenus et les perspectives d'évolution.
+
+\vspace{0.3cm}
+
+Les objectifs fixés en début de projet ont été atteints :
+
+\begin{itemize}
+    \item \textbf{Scalabilité} : L'architecture microservices permet désormais de faire évoluer indépendamment chaque domaine métier. Le \textit{Product Service} peut absorber des pics de consultation sans impacter le traitement des paiements.
+
+    \item \textbf{Résilience} : Le pattern Saga avec compensation garantit l'intégrité des données distribuées. La panne d'un service n'entraîne plus l'indisponibilité totale de la plateforme.
+
+    \item \textbf{Maintenabilité} : L'architecture hexagonale adoptée au sein de chaque service et le langage ubiquiste du DDD ont rendu le code aligné sur le métier pharmaceutique, réduisant considérablement les risques de régression lors des évolutions.
+
+    \item \textbf{Sécurité} : La stratégie Zero Trust, la propagation d'identité via JWT et le contrôle d'accès par rôles (RBAC) offrent un niveau de sécurité adapté à un contexte médical sensible.
+\end{itemize}
+
+\vspace{0.3cm}
+
+Néanmoins, cette transition n'est pas sans limites. La complexité opérationnelle accrue, la gestion de la consistance éventuelle, ainsi que le léger compromis sur la latence réseau (le fameux "impôt de la distribution") représentent des défis concrets inhérents aux systèmes distribués. Ces limites, identifiées et mesurées lors de nos phases de test, constituent une véritable feuille de route pour les évolutions futures. Les perspectives d'optimisation sont claires : l'orchestration dynamique avec Kubernetes, l'adoption d'un \textit{Service Mesh} pour déléguer la sécurité inter-services et rendre le réseau observable sans modifier le code applicatif, ou encore l'intégration d'un cache Redis et du protocole gRPC pour pulvériser les temps de réponse.
+
+\vspace{0.3cm}
+
+En définitive, ce projet démontre qu'une migration vers les microservices ne doit pas être menée comme une fin en soi, mais comme une réponse mesurée à des besoins métiers concrets et quantifiables. Techcare dispose aujourd'hui d'un socle technologique moderne, évolutif et aligné sur les meilleures pratiques de l'industrie logicielle, prêt à accompagner la croissance de la plateforme pharmaceutique de demain.

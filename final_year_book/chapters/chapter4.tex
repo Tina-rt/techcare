@@ -1,0 +1,157 @@
+\thispagestyle{normalpage}
+
+\begin{center}
+    \large \textbf{CHAPITRE IV} \\[0.3em]
+    \large \textbf{RÉSULTATS, ANALYSE CRITIQUE ET PERSPECTIVES}
+\end{center}
+\addcontentsline{toc}{chapter}{CHAPITRE IV - RÉSULTATS ET ANALYSE}
+\label{page:chapitre4}
+
+Ce dernier chapitre est consacré à l'évaluation des résultats obtenus à l'issue de la migration vers l'architecture microservices. Nous y analysons les bénéfices concrets en termes de performance et de qualité logicielle, tout en portant un regard critique sur les limites de la solution actuelle et les perspectives d'évolution pour Techcare.
+
+\section{IV.1 Évaluation des performances et de la scalabilité}
+La migration a permis d'observer des améliorations tangibles sur plusieurs indicateurs clés de performance (KPI).
+
+\subsection{IV.1.1 Temps de réponse et latence}
+Grâce à l'utilisation de NestJS et à l'optimisation des bases de données (PostgreSQL pour les transactions, MongoDB pour le catalogue), nous avons constaté une réduction moyenne de 40\% du temps de réponse sur les requêtes de consultation. Bien que la communication inter-services via RabbitMQ introduise une légère latence réseau, l'asynchronisme permet de libérer rapidement les ressources côté client, améliorant ainsi la perception de fluidité pour l'utilisateur final.
+
+\subsection{IV.1.2 Montée en charge (Scalabilité)}
+L'un des succès majeurs de ce projet réside dans la capacité de scalabilité horizontale. En environnement conteneurisé, il est désormais possible de cloner uniquement les microservices les plus sollicités (comme le \textit{Product Service} lors de pics de consultation) sans avoir à dupliquer l'intégralité du système. Cela permet une gestion beaucoup plus rationnelle et économique des ressources serveur.
+
+\section{IV.2 Analyse de la qualité logicielle et maintenabilité}
+Le passage aux microservices a profondément transformé le flux de développement.
+
+\subsection{IV.2.1 Indépendance des déploiements}
+Auparavant, toute modification du monolithe imposait un déploiement complet et risqué. Aujourd'hui, chaque service dispose de son propre pipeline. Les équipes peuvent mettre à jour le \textit{Notification Service} sans affecter la disponibilité du tunnel d'achat, réduisant ainsi drastiquement les risques de régression globale.
+
+\subsection{IV.2.2 Clarté du code et isolation des fautes}
+L'adoption de l'architecture hexagonale au sein de chaque service a permis d'assainir la base de code. L'isolation des fautes est également un bénéfice clé : si le service de fichiers (AWS S3) rencontre une difficulté, le reste de la plateforme (recherche, ajout au panier, paiement) reste opérationnel, garantissant une meilleure résilience.
+
+\subsection{IV.2.3 Mutualisation du code et sécurité du typage}
+La mise en œuvre d'une bibliothèque partagée (\textit{Shared Library}) a permis de rationaliser le développement en centralisant les DTOs et les interfaces. Cette approche a drastiquement réduit la duplication de code et, couplée à l'élimination systématique du type \texttt{any}, a renforcé la robustesse de l'application. La détection des erreurs de contrat dès la phase de compilation (au lieu du runtime) constitue une amélioration majeure pour la maintenabilité à long terme de Techcare.
+
+\section{IV.3 Bilan critique et limites de la solution}
+Malgré ces résultats positifs, cette transition vers les microservices comporte des défis non négligeables.
+
+\subsection{IV.3.1 Complexité opérationnelle}
+La multiplicité des services augmente la complexité du monitoring et du debugging. Suivre une transaction qui traverse plusieurs services nécessite des outils de traçage distribué que nous n'avons pas encore totalement intégrés. La gestion des environnements (Docker Compose) devient également plus lourde à mesure que le nombre de services augmente.
+
+\subsection{IV.3.2 Consistance éventuelle}
+L'utilisation du schéma de consistance éventuelle via RabbitMQ impose d'accepter qu'un stock puisse être désynchronisé de quelques millisecondes entre deux services. Bien que le pattern Saga gère les compensations en cas d'échec, ce paradigme est plus complexe à appréhender que les transactions ACID classiques du monolithe.
+
+\subsection{IV.3.3 Robustesse du Broker de messages (SPOF)}
+Dans notre architecture, RabbitMQ constitue le cœur de la communication. Sa défaillance pourrait paralyser l'ensemble du système. Pour pallier ce risque, plusieurs stratégies de mitigation sont envisageables pour une mise en production réelle :
+\begin{enumerate}[label=\alph*)]
+    \item \textbf{Clustering et Miroitage} : Mise en place d'un cluster RabbitMQ avec des files d'attente répliquées sur plusieurs nœuds pour garantir la haute disponibilité.
+    \item \textbf{Persistance des messages} : Configuration des messages comme "persistants" pour garantir qu'ils ne soient pas perdus en cas de redémarrage (crash) du broker.
+    \item \textbf{Pattern Transactional Outbox} : Écriture de l'événement dans la base de données locale du service avant l'envoi vers RabbitMQ, assurant qu'aucun message n'est perdu même si le broker est momentanément injoignable.
+    \item \textbf{Dégradation gracieuse} : Mise en œuvre de disjoncteurs (Circuit Breakers) côté API Gateway pour renvoyer des réponses par défaut ou des messages d'erreur informatifs à l'utilisateur au lieu d'un échec total du système.
+\end{enumerate}
+
+
+\section{IV.4 Validation fonctionnelle via Postman}
+Afin de valider le bon fonctionnement de l'API Gateway et sa communication avec les microservices, nous avons réalisé une série de tests fonctionnels à l'aide de l'outil Postman.
+
+\subsection{IV.4.1 Test de l'authentification (Sign-in)}
+La figure ci-dessous illustre un test de connexion sur l'endpoint \texttt{/auth/signin}. L'utilisateur fournit ses identifiants et reçoit en retour un jeton JWT (JSON Web Token) valide, confirmant la réussite de l'authentification et de la validation par le microservice \textit{User Manager}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/auth-screenshot.png}
+    \caption{Capture d'écran Postman : Test de réussite de l'authentification}\label{fig:postman-auth}
+\end{figure}
+
+Comme observé sur la capture, le temps de réponse est de \textbf{107 ms}. Ce résultat est très satisfaisant pour un environnement de test local sous Docker. Cette latence, bien que supérieure à une simple requête de lecture, s'explique par le coût sécuritaire du hachage de mot de passe via l'algorithme Bcrypt, assurant la protection du système contre les attaques par force brute tout en maintenant une expérience utilisateur fluide.
+
+\subsection{IV.4.2 Validation de la protection des routes (/auth/me)}
+Pour s'assurer que les routes sensibles sont correctement protégées, nous avons testé l'accès à l'endpoint \texttt{/auth/me} sans fournir de jeton JWT. Comme l'illustre la figure suivante, le système renvoie un code d'erreur \textbf{401 Unauthorized}, confirmant que l'API Gateway bloque l'accès aux utilisateurs non authentifiés avant même d'interroger les microservices métier.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/auth-failed-screenshot.png}
+    \caption{Capture d'écran Postman : Test de refus d'accès (401 Unauthorized)}\label{fig:postman-auth-failed}
+\end{figure}
+
+\subsection{IV.4.3 Consultation du catalogue (Performance et "Impôt de la distribution")}
+La récupération de la liste des produits sollicite le \textit{Product Service} via la Gateway. Ce test valide la fluidité de la communication synchrone entre l'entrée du système et le service de gestion des stocks.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/catalog-screenshot.png}
+    \caption{Capture d'écran Postman : Récupération de la liste des produits}\label{fig:postman-catalog}
+\end{figure}
+
+Comme observé, le temps de réponse reste inférieur à \textbf{50 ms} (ici 22 ms). Toutefois, lors de nos tests comparatifs, nous avons constaté que ce temps de réponse est légèrement supérieur sur cette nouvelle architecture (10 à 40 ms) par rapport à l'ancien monolithe ExpressJS avec PostgreSQL (8 à 20 ms). 
+
+Ce phénomène, souvent appelé "l'impôt de la distribution" (\textit{Distributed Tax}), s'explique par les surcoûts inhérents aux microservices :
+\begin{enumerate}[label=\textbullet]
+    \item \textbf{Latence réseau inter-services (Network Hop) :} La requête transite par l'API Gateway, puis est envoyée via le réseau local au \textit{Product Service}, avant de revenir. Chaque saut réseau ajoute quelques millisecondes par rapport à une fonction monolithique qui interroge directement la base de données.
+    \item \textbf{Surcoût de routage :} L'API Gateway ajoute une couche d'abstraction nécessaire (validation des jetons JWT, routage dynamique) avant même de solliciter le service sous-jacent.
+    \item \textbf{Sérialisation / Désérialisation :} Les données issues de MongoDB doivent être sérialisées par le \textit{Product Service}, envoyées, puis désérialisées et re-sérialisées par l'API Gateway avant d'atteindre le client.
+\end{enumerate}
+\vspace{2cm}
+Malgré ce léger compromis sur la latence individuelle, cette architecture garantit une capacité de montée en charge (\textit{Scale-up}) bien supérieure, empêchant le système de s'effondrer sous un trafic intense.
+\subsection{IV.4.4 Communication asynchrone et événements (RabbitMQ)}
+L'ajout d'un nouveau produit par un administrateur illustre parfaitement le fonctionnement asynchrone de l'architecture. Lorsqu'une requête de création est envoyée à l'API Gateway, celle-ci transmet l'ordre au \textit{Product Manager}. Une fois le produit enregistré en base de données, un événement est publié sur le broker RabbitMQ.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/product-creation-screenshot.png}
+    \caption{Capture d'écran Postman : Création réussie d'un produit (201 Created)}\label{fig:postman-creation}
+\end{figure}
+
+Le succès de l'opération côté client (statut \textbf{201 Created}) est quasi immédiat car le système ne bloque pas en attendant que tous les services secondaires (notifications, statistiques) aient traité l'information. En coulisses, le broker de messages prend le relais pour diffuser l'événement aux abonnés concernés.
+
+La figure suivante montre l'activité sur l'interface d'administration de RabbitMQ au moment de la création. On y voit clairement le pic de production de messages dans la file d'attente dédiée, validant la bonne transmission de l'événement.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/event-trigger-screenshot.png}
+    \caption{Interface RabbitMQ : Pic d'activité sur la file product\_manager\_queue}\label{fig:rabbitmq-event}
+\end{figure}
+
+Cette approche garantit une cohérence éventuelle sur l'ensemble de la plateforme (mise à jour des notifications, synchronisation des caches, reporting) sans dégrader le temps de réponse perçu par l'utilisateur.
+
+\subsection{IV.4.5 Validation des données et robustesse (Shared Library)}
+Enfin, l'utilisation de la bibliothèque partagée (\textit{Shared Library}) permet d'unifier la validation des données grâce aux DTOs. En tentant d'envoyer des données mal formatées, le système rejette immédiatement la requête avec un message explicite.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/validation-error-screenshot.png}
+    \caption{Capture d'écran Postman : Rejet d'une requête mal formée (400 Bad Request)}\label{fig:postman-validation}
+\end{figure}
+
+Comme l'illustre la capture ci-dessus, nous avons volontairement inséré une chaîne de caractères (\texttt{"test\_rejet"}) dans le champ \texttt{reduction}, qui attend spécifiquement une valeur numérique. Ce mécanisme garantit qu'aucune donnée invalide ne circule entre les microservices, renforçant la stabilité globale et simplifiant le debugging côté frontend.
+
+\subsection{IV.4.6 Gestion des fichiers et stockage S3 (File Service)}
+Lors de la création d'un produit depuis l'interface client, l'image associée (envoyée sous forme de \texttt{multipart/form-data}) est prise en charge par l'API Gateway. Avant de déclencher la création du produit en base de données, la Gateway délègue la sauvegarde de ce fichier au \textit{File Service}, qui se charge de l'uploader de manière sécurisée vers un stockage objet compatible S3 (AWS ou équivalent).
+
+La figure ci-dessous montre la réussite de cet upload depuis l'interface de gestion S3. L'image du produit est correctement stockée et une URL publique (ou pré-signée) est générée, allégeant ainsi la base de données MongoDB qui ne conserve qu'un lien texte vers l'objet.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{postman_screenshot/s3-bucket-screenshot.png}
+    \caption{Interface S3 : Validation de l'upload de l'image du produit}\label{fig:s3-upload}
+\end{figure}
+
+Cette externalisation du stockage physique garantit de meilleures performances d'affichage côté client en exploitant les capacités de diffusion d'un système de fichiers distribué.
+\newpage
+\section{IV.5 Perspectives d'évolutions et améliorations futures}
+Ce projet constitue une première étape solide qui ouvre la voie à de nombreuses optimisations.
+
+\subsection{IV.5.1 Orchestration avec Kubernetes}
+La prochaine étape logique serait la migration vers Kubernetes (K8s). Cela permettrait une auto-scalabilité dynamique des pods, une gestion plus fine des secrets et une meilleure résilience grâce au \textit{Self-healing} (redémarrage automatique des conteneurs défaillants).
+
+\subsection{IV.5.2 Mise en place d'un Service Mesh}
+Pour résoudre la complexité du traçage et de la sécurité inter-services, l'adoption d'un Service Mesh (ex: Istio) permettrait d'automatiser le chiffrement TLS entre services (mtls) et de bénéficier de tableaux de bord de monitoring avancés sans modifier le code applicatif.
+
+\subsection{IV.5.3 CI/CD avancée}
+L'automatisation complète des tests et du déploiement via GitHub Actions ou GitLab CI renforcerait encore la rapidité de livraison de Techcare, en garantissant que chaque microservice est testé isolément avant sa mise en production.
+
+\subsection{IV.5.4 Optimisation des temps de réponse (Cache Redis)}
+Pour pallier le léger ralentissement observé lors des requêtes synchrones ("impôt de la distribution"), l'ajout d'une couche de cache en mémoire avec \textbf{Redis} au niveau de l'API Gateway serait une évolution majeure. Ainsi, lors des lectures fréquentes du catalogue, la Gateway pourrait renvoyer les données quasi instantanément (2 à 5 ms) sans solliciter le \textit{Product Service} ni traverser le réseau.
+
+\subsection{IV.5.5 Transition vers gRPC pour les communications synchrones}
+Actuellement, les lectures inter-services transitent par des protocoles introduisant un surcoût de sérialisation textuelle (JSON). L'adoption de \textbf{gRPC} (Google Remote Procedure Call) pour ces échanges synchrones réduirait considérablement la taille des paquets grâce au format binaire Protobuf, et accélérerait la communication réseau.
+\section*{Conclusion partielle}
+Ce chapitre a démontré que les objectifs initiaux de scalabilité, de sécurité et de disponibilité ont été atteints. Les tests fonctionnels via Postman confirment la fiabilité des mécanismes de protection et l'efficacité des échanges asynchrones via le broker de messages. Si l'architecture microservices apporte une complexité technique supplémentaire, les bénéfices en termes d'agilité et de résilience justifient largement cet investissement pour l'évolution de la plateforme Techcare.

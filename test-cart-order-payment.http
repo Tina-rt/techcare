@@ -1,0 +1,141 @@
+### Cart Manager Tests
+
+# Add item to cart
+POST http://localhost:4000/cart/add
+Content-Type: application/json
+
+{
+  "userId": "user123",
+  "productId": "prod1",
+  "quantity": 2,
+  "price": 29.99,
+  "name": "Test Product",
+  "image": "https://example.com/image.jpg"
+}
+
+###
+
+# Get cart
+GET http://localhost:4000/cart/user123
+
+###
+
+# Update cart item
+PUT http://localhost:4000/cart/update
+Content-Type: application/json
+
+{
+  "userId": "user123",
+  "productId": "prod1",
+  "quantity": 5
+}
+
+###
+
+# Remove from cart
+DELETE http://localhost:4000/cart/remove
+Content-Type: application/json
+
+{
+  "userId": "user123",
+  "productId": "prod1"
+}
+
+###
+
+# Clear cart
+DELETE http://localhost:4000/cart/clear/user123
+
+###
+
+### Order Manager Tests
+
+# Create order
+POST http://localhost:4000/order/create
+Content-Type: application/json
+
+{
+  "userId": "user123",
+  "shippingAddress": {
+    "fullName": "John Doe",
+    "address": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "postalCode": "10001",
+    "country": "USA",
+    "phone": "+1234567890"
+  },
+  "notes": "Please deliver before 5 PM"
+}
+
+###
+
+# Get order by ID
+GET http://localhost:4000/order/6981b251f1376ed778ab29a5
+
+###
+
+# Get user orders
+GET http://localhost:4000/order/user/user123
+
+###
+
+# Get all orders
+GET http://localhost:4000/order
+
+###
+
+# Update order status
+PUT http://localhost:4000/order/status
+Content-Type: application/json
+
+{
+  "orderId": "6981b05b0858339ceb2f483d",
+  "status": "shipped",
+  "trackingNumber": "TRACK123456"
+}
+
+###
+
+# Cancel order
+PUT http://localhost:4000/order/cancel/ORDER_ID_HERE
+
+###
+
+### Payment Manager Tests
+
+# Create payment intent
+POST http://localhost:4000/payment/create-intent
+Content-Type: application/json
+
+{
+  "orderId": "6981b251f1376ed778ab29a5",
+  "amount": 59.98,
+  "currency": "usd"
+}
+
+###
+
+# Confirm payment
+POST http://localhost:4000/payment/confirm
+Content-Type: application/json
+
+{
+  "paymentIntentId": "PAYMENT_INTENT_ID_HERE",
+  "orderId": "ORDER_ID_HERE"
+}
+
+###
+
+# Refund payment
+POST http://localhost:4000/payment/refund
+Content-Type: application/json
+
+{
+  "paymentIntentId": "PAYMENT_INTENT_ID_HERE"
+}
+
+###
+
+# Get payment intent
+GET http://localhost:4000/payment/intent/PAYMENT_INTENT_ID_HERE

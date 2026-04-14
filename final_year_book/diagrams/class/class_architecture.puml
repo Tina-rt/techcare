@@ -1,0 +1,190 @@
+@startuml class_microservices
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "API Gateway" {
+  class Gateway {
+    - jwtService: JwtService
+    - productClient: ClientProxy
+    - inventoryClient: ClientProxy
+    --
+    + authenticateUser()
+    + createProduct()
+    + getProducts()
+    + updateInventory()
+  }
+  
+  class JwtAuthGuard {
+    + canActivate()
+    + validateToken()
+  }
+  
+  Gateway ..> JwtAuthGuard : uses
+}
+
+package "Product Manager Service" {
+  class Product {
+    - id: string
+    - name: string
+    - description: string
+    - price: number
+    - categoryId: string
+    - image: string
+    - specifications: Object
+    --
+    + toJSON()
+  }
+  
+  class ProductService {
+    - productRepository
+    - fileClient: ClientProxy
+    --
+    + create(dto)
+    + findAll()
+    + findById(id)
+    + update(id, dto)
+    + delete(id)
+  }
+  
+  class ProductController {
+    --
+    @MessagePattern('create_product')
+    + handleCreateProduct()
+    @MessagePattern('find_all_products')
+    + handleFindAll()
+  }
+  
+  ProductController --> ProductService
+  ProductService --> Product
+}
+
+package "Inventory Manager Service" {
+  class Inventory {
+    - id: string
+    - productId: string
+    - quantity: number
+    - location: string
+    - lastUpdate: Date
+    --
+    + decrementStock(qty)
+    + incrementStock(qty)
+  }
+  
+  class InventoryService {
+    - db: DrizzleDB
+    --
+    + reserveStock(productId, qty)
+    + releaseStock(productId, qty)
+    + updateStock(productId, qty)
+    + getStockLevel(productId)
+  }
+  
+  class InventoryController {
+    --
+    @MessagePattern('reserve_stock')
+    + handleReserveStock()
+    @MessagePattern('update_stock')
+    + handleUpdateStock()
+  }
+  
+  InventoryController --> InventoryService
+  InventoryService --> Inventory
+}
+
+package "User Manager Service" {
+  class User {
+    - id: string
+    - email: string
+    - password: string
+    - role: Role
+    - createdAt: Date
+    --
+    + hashPassword()
+    + comparePassword()
+  }
+  
+  enum Role {
+    ADMIN
+    PHARMACIST
+    CLIENT
+  }
+  
+  class UserService {
+    - db: DrizzleDB
+    - jwtService: JwtService
+    --
+    + register(dto)
+    + login(credentials)
+    + validateUser(id)
+  }
+  
+  User --> Role
+  UserService --> User
+}
+
+package "File Manager Service" {
+  class FileService {
+    - s3Client: S3Client
+    - cloudFrontUrl: string
+    --
+    + uploadFile(file, folder)
+    + deleteFile(key)
+    + generateFileKey(filename)
+  }
+  
+  class FileController {
+    --
+    @MessagePattern('upload_file')
+    + handleUploadFile()
+  }
+  
+  FileController --> FileService
+}
+
+package "Notification Service" {
+  class NotificationService {
+    - emailService: EmailService
+    - socketGateway: WebSocketGateway
+    --
+    + sendOrderConfirmation(orderId)
+    + sendStockAlert(productId)
+    + broadcastNotification(message)
+  }
+  
+  class NotificationController {
+    --
+    @MessagePattern('send_notification')
+    + handleSendNotification()
+  }
+  
+  NotificationController --> NotificationService
+}
+
+' Relations inter-services
+Gateway ..> ProductController : RabbitMQ
+Gateway ..> InventoryController : RabbitMQ
+Gateway ..> FileController : RabbitMQ
+Gateway ..> NotificationController : RabbitMQ
+
+ProductService ..> FileController : upload images
+InventoryService ..> NotificationController : stock alerts
+
+note right of Gateway
+  Point d'entrée unique
+  Authentification JWT
+  Routage vers microservices
+end note
+
+note bottom of ProductService
+  Base de données: MongoDB
+  Schéma flexible pour
+  spécifications produits
+end note
+
+note bottom of InventoryService
+  Base de données: PostgreSQL
+  Garanties ACID pour stocks
+end note
+
+@enduml

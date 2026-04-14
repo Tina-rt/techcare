@@ -1,0 +1,22 @@
+\documentclass{report}
+\usepackage{tocloft}
+\usepackage{shorttoc}
+\begin{document}
+\shorttoc{SOMMAIRE}{1}
+
+\chapter{One}
+\section{Sub}
+\chapter{Two}
+
+\newpage
+\makeatletter
+\renewcommand{\@cftmaketoctitle}{
+  \addcontentsline{toc}{chapter}{TABLE DES MATIÈRES}
+  \begin{center}
+    \large\bfseries TABLE DES MATIÈRES
+  \end{center}
+  \vspace{1cm}
+}
+\makeatother
+\tableofcontents
+\end{document}

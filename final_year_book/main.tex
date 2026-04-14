@@ -1,0 +1,271 @@
+\documentclass[12pt,a4paper]{report}
+
+% Encodages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% Mise en page
+\usepackage{geometry}
+
+% Graphiques et couleurs
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+
+% Gestion des titres
+\usepackage{titlesec}
+
+% Pieds et en-têtes personnalisés
+\usepackage{fancyhdr}
+
+% Interligne et typographie
+\usepackage{setspace}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{tgtermes} % Police Times-like
+\usepackage{microtype}
+
+% Tableaux et boîtes
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{tcolorbox}
+
+% Listes
+\usepackage{enumitem}
+
+% Table des matières
+\usepackage{tocloft}
+\usepackage{shorttoc}
+\usepackage{etoc}
+\etocsetlevel{tocentry}{0} % Niveau personnalisé équivalent à un chapitre
+\setcounter{tocdepth}{3}
+\cftpagenumbersoff{chapter}
+\cftpagenumbersoff{section}
+
+\newcommand{\printmanualtoc}{
+    \begin{center}
+        \addcontentsline{toc}{tocentry}{TABLE DES MATIÈRES}
+    \end{center}
+    \vspace{0.8cm}
+    
+    \etocsetnexttocdepth{3}
+    \etocsetlevel{tocentry}{0}
+    \etocsetstyle{chapter}
+        {\pagebreak[3]\addvspace{1.5ex}}
+        {}
+        {\textbf{\etocname}\hfill \textbf{\etocpage}\par}
+        {}
+        
+    \etocsetstyle{tocentry}
+        {\addvspace{1.5ex}}
+        {}
+        {\textbf{\etocname}\hfill \textbf{\etocpage}\par}
+        {}
+        
+    \etocsetstyle{section}
+        {\addvspace{0.2ex}}
+        {}
+        {\hspace{1.5cm}\etocname{} \dotfill{} \etocpage\par}
+        {}
+        
+    \etocsetstyle{subsection}
+        {}
+        {}
+        {\hspace{3cm}\etocname{} \dotfill{} \etocpage\par}
+        {}
+
+    \etocsetstyle{subsubsection}
+        {}
+        {}
+        {\hspace{4.5cm}\etocname{} \dotfill{} \etocpage\par}
+        {}
+        
+    \etoctableofcontents*
+}
+
+\newcommand{\printsommaire}{
+    \begin{center}
+        \large \textbf{SOMMAIRE}
+    \end{center}
+    \vspace{0.8cm}
+    
+    \etocsetnexttocdepth{1}
+    \etocsetlevel{tocentry}{6} % On le cache du sommaire
+    \etocsetstyle{tocentry}{}{}{}{} % Force le masquage total
+    
+    \etocsetstyle{chapter}
+        {\addvspace{1.5ex}}
+        {}
+        {\textbf{\etocname}\par}
+        {}
+        
+    \etocsetstyle{section}
+        {\addvspace{0.2ex}}
+        {}
+        {\hspace{1cm}\etocname\par}
+        {}
+        
+    \etoctableofcontents*
+}
+% Configuration de la page
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.0cm,
+    right=2.0cm
+}
+
+% Définition des couleurs INSI
+\definecolor{insiturquoise}{RGB}{45,140,130}
+\definecolor{insinavy}{RGB}{25,50,75}
+\definecolor{insidarkblue}{RGB}{20,40,65}
+\setstretch{1.25}
+% Configuration des titres
+\titleformat{\chapter}[display]
+{\normalfont\Large\bfseries\color{black}}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\titleformat{\section}
+{\normalfont\large\bfseries\color{black}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{2.5ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\titleformat{\subsection}
+{\normalfont\normalsize\bfseries\color{black}}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{2ex plus 1ex minus .2ex}{1ex plus .2ex}
+
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries\color{black}}{}{0pt}{}
+\titlespacing*{\subsubsection}{0pt}{1.5ex plus 1ex minus .2ex}{0.8ex plus .2ex}
+
+
+% Suppression de l'indentation
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setcounter{secnumdepth}{0} % Empêche la numérotation automatique (I.1, etc.)
+
+% Configuration spéciale pour la page de couverture
+\fancypagestyle{coverpage}{
+    \fancyhf{} % Supprime tous les en-têtes et pieds de page
+    \renewcommand{\headrulewidth}{0pt} % Pas de ligne d'en-tête
+    \renewcommand{\footrulewidth}{0pt} % Pas de ligne de pied de page
+}
+
+% Style pour les pages suivantes
+\fancypagestyle{normalpage}{
+    \fancyhf{}
+    \fancyfoot[R]{\thepage} % Numéro de page en bas à droite
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+    \setlength{\headheight}{14pt}
+}
+
+
+\begin{document}
+    % On s'assure que le contenu est bien enregistré dans le fichier .toc
+    \etocsetnexttocdepth{-2}
+    \tableofcontents
+    
+    \input{section/coverpage.tex}
+
+    % Appliquer le style normal pour les pages suivantes
+    \pagestyle{normalpage}
+
+    % PAGE BLANCHE APRÈS LA COUVERTURE
+    \newpage
+    \thispagestyle{empty}
+    \mbox{}
+
+    % PAGE DES REMERCIEMENTS
+    \newpage
+    \pagenumbering{roman}
+    \fancyfoot[R]{\thepage}
+    \setcounter{page}{1}
+    \thispagestyle{normalpage}
+
+    % Titre centré en noir, taille normale
+        \begin{center}
+            {\large\bfseries REMERCIEMENTS}\label{page:remerciements}
+        \end{center}
+            \addcontentsline{toc}{chapter}{REMERCIEMENTS}
+    Avant d'entamer ce mémoire, nous souhaitons exprimer nos sincères remerciements à toutes les personnes qui, de près ou de loin, ont contribué à la réalisation de ce travail et à l'aboutissement de ce projet.
+    \begin{itemize}
+        \item Au Seigneur Tout-Puissant, pour la force, la santé et l'inspiration qu'Il nous a accordées durant ce parcours universitaire et pour avoir rendu possible l'achèvement de ce mémoire.
+        
+        \item À Docteur RAMASONDRANO Andriamanjaka, directeur de l'Institut National Supérieur d'Informatique (INSI), en reconnaissance de l'environnement d'apprentissage offert et du soutien institutionnel apporté tout au long de nos études.
+        
+        \item À Docteur \ldots notre encadreur pédagogique, pour son accompagnement, ses conseils constructifs et son implication précieuse dans la conception et la finalisation de ce mémoire.
+        
+        \item Aux enseignants de la filière genie logiciel (GL), pour les connaissances théoriques et pratiques transmises durant cette deuxième année de licence, qui ont jeté les bases nécessaires à ce projet.
+        
+        \item À nos famille et à nos proches, pour leur soutien moral et leurs encouragements constants, qui ont été une source de motivation essentielle durant tout ce parcours.
+        
+        \item À nos camarades de promotion, pour l'entraide et la solidarité partagées tout au long de nos études.
+        
+        \item Enfin, à toutes les personnes qui, de près ou de loin, ont apporté leur aide dans la réalisation de ce mémoire et la conception du projet Jereo.
+    \end{itemize}
+
+    \input{section/resume.tex}
+
+    \newpage
+    \printsommaire
+
+    \newpage
+    % PAGE DE LA LISTE DES ABRÉVIATIONS, SIGLES ET ACRONYMES
+    \thispagestyle{normalpage}
+
+    % \begin{center}
+    %     {\large\bfseries LISTE DES ABRÉVIATIONS, SIGLES ET ACRONYMES}
+    % \end{center}
+    % \addcontentsline{toc}{chapter}{LISTE DES ABRÉVIATIONS, SIGLES ET ACRONYMES}\label{page:abreviations}
+    
+    % \begin{flushleft}
+    %     \begin{tabular}{@{} l l @{}}
+    %         API & Application Programming Interface \\
+    %         DB & Database \\
+    %         HTTP & HyperText Transfer Protocol \\
+    %         JWT & JSON Web Token \\
+    %         K8s & Kubernetes \\
+    %         REST & Representational State Transfer \\
+    %         SQL & Structured Query Language \\
+%         UI & User Interface \\
+    %         UX & User Experience \\
+    %     \end{tabular}
+    % \end{flushleft}
+
+    \input{chapters/abbreviations.tex}
+    \input{section/glossaire.tex}
+    \input{section/liste_tableau.tex}
+    \input{section/liste_figure.tex}
+
+    \newpage
+    \newpage
+    \newcounter{savepage}
+    \setcounter{savepage}{\value{page}}
+    \pagenumbering{arabic}
+
+   \input{chapters/introduction.tex}
+
+   \newpage
+    \input{chapters/chapter1.tex}
+    \newpage
+    \input{chapters/chapter2.tex}
+    \newpage
+    \input{chapters/chapter3.tex}
+    \newpage
+    \input{chapters/chapter4.tex}
+    \newpage
+    \input{chapters/conclusion.tex}
+    
+    \newpage
+    \pagenumbering{roman}
+    \setcounter{page}{\value{savepage}}
+    \input{chapters/bibliographie.tex}
+
+    \newpage
+    \appendix
+    \input{chapters/annexes.tex}
+    
+    \newpage
+    % Génération de la table des matières via etoc (solution alternative à \tableofcontents)
+    \printmanualtoc
+\end{document}

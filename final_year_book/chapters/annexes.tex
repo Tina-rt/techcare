@@ -1,0 +1,249 @@
+\thispagestyle{normalpage}
+\addcontentsline{toc}{chapter}{ANNEXES}
+
+\begin{center}
+    \large \textbf{ANNEXES}
+\end{center}
+
+% ============================================================
+\section*{Annexe A — Documentation Complète de l'API REST}
+\label{annexe:api}
+\addcontentsline{toc}{section}{Annexe A — Documentation de l'API REST}
+
+\subsection*{A.1 Informations générales}
+\begin{itemize}
+    \item \textbf{Base URL :} \texttt{http://localhost:4000} (développement)
+    \item \textbf{Format :} \texttt{application/json} pour toutes les réponses
+    \item \textbf{Authentification :} JWT Bearer Token dans le header \texttt{Authorization}
+    \item La colonne \textbf{Auth} indique si la route est protégée (Oui) ou publique (Non).
+\end{itemize}
+
+% ------- AUTH -------
+\subsection*{A.2 Module Authentification (\texttt{/auth})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        POST & \texttt{/auth/signup} & Créer un compte utilisateur & Non \\
+        \hline
+        POST & \texttt{/auth/signin} & Se connecter, retourne un JWT & Non \\
+        \hline
+        GET  & \texttt{/auth/me} & Retourne le profil de l'utilisateur connecté & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Authentification}
+\end{table}
+
+\textbf{Corps de} \texttt{POST /auth/signup} \textbf{et} \texttt{POST /auth/signin} :
+\begin{verbatim}
+{ "email": "user@techcare.mg", "password": "motdepasse" }
+\end{verbatim}
+
+\textbf{Réponse de} \texttt{POST /auth/signin} :
+\begin{verbatim}
+{ "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." }
+\end{verbatim}
+
+% ------- PRODUITS -------
+\subsection*{A.3 Module Produits (\texttt{/products})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        GET    & \texttt{/products}     & Liste complète du catalogue & Non \\
+        \hline
+        GET    & \texttt{/products/:id} & Détail d'un produit par ID  & Non \\
+        \hline
+        POST   & \texttt{/products}     & Créer un produit (multipart/form-data avec image) & Oui \\
+        \hline
+        PUT    & \texttt{/products/:id} & Mettre à jour un produit & Oui \\
+        \hline
+        DELETE & \texttt{/products/:id} & Supprimer un produit & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Produits}
+\end{table}
+
+\textbf{Champs pour} \texttt{POST/PUT /products} (multipart/form-data) :
+\begin{verbatim}
+name        : string  — Nom du produit
+description : string  — Description
+price       : number  — Prix unitaire
+category    : string  — ObjectId de la catégorie
+image       : File    — Fichier image (jpg, png)
+\end{verbatim}
+
+% ------- CATEGORIES -------
+\subsection*{A.4 Module Catégories (\texttt{/category})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        GET    & \texttt{/category}     & Toutes les catégories & Non \\
+        GET    & \texttt{/category/:id} & Une catégorie par ID  & Non \\
+        POST   & \texttt{/category}     & Créer une catégorie   & Oui \\
+        PUT    & \texttt{/category/:id} & Modifier              & Oui \\
+        DELETE & \texttt{/category/:id} & Supprimer             & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Catégories}
+\end{table}
+
+% ------- INVENTAIRE -------
+\subsection*{A.5 Module Inventaire (\texttt{/inventory})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        GET  & \texttt{/inventory}            & Stock de tous les produits   & Non \\
+        GET  & \texttt{/inventory/:productId} & Stock d'un produit spécifique & Non \\
+        POST & \texttt{/inventory/update}     & Mettre à jour le stock       & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Inventaire}
+\end{table}
+
+\textbf{Corps de} \texttt{POST /inventory/update} :
+\begin{verbatim}
+{ "productId": "6502d...", "quantity": 50 }
+\end{verbatim}
+
+% ------- PANIER -------
+\subsection*{A.6 Module Panier (\texttt{/cart})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        POST   & \texttt{/cart/add}            & Ajouter un article au panier   & Non \\
+        GET    & \texttt{/cart/:userId}        & Consulter le panier            & Non \\
+        PUT    & \texttt{/cart/update}         & Modifier la quantité           & Non \\
+        DELETE & \texttt{/cart/remove}         & Retirer un article             & Non \\
+        DELETE & \texttt{/cart/clear/:userId}  & Vider le panier                & Non \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Panier}
+\end{table}
+
+\textbf{Corps de} \texttt{POST /cart/add} :
+\begin{verbatim}
+{
+  "userId": "user123", "productId": "6502d...",
+  "quantity": 2,       "price": 3.50,
+  "name": "Doliprane", "image": "https://..."
+}
+\end{verbatim}
+
+% ------- COMMANDES -------
+\subsection*{A.7 Module Commandes (\texttt{/order})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        POST & \texttt{/order/create}         & Créer une commande (déclenche Saga) & Non \\
+        GET  & \texttt{/order}                & Toutes les commandes (admin)        & Non \\
+        GET  & \texttt{/order/:orderId}       & Commande par ID                     & Non \\
+        GET  & \texttt{/order/user/:userId}   & Commandes d'un utilisateur          & Non \\
+        PUT  & \texttt{/order/status}         & Mettre à jour le statut             & Non \\
+        PUT  & \texttt{/order/cancel/:orderId}& Annuler (déclenche compensation)    & Non \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Commandes}
+\end{table}
+
+\textbf{Corps de} \texttt{PUT /order/status} :
+\begin{verbatim}
+{
+  "orderId": "6981b...", "status": "shipped",
+  "trackingNumber": "TRACK123456"
+}
+\end{verbatim}
+Valeurs de \texttt{status} : \texttt{PENDING} | \texttt{CONFIRMED} | \texttt{shipped} | \texttt{DELIVERED} | \texttt{CANCELLED}
+
+% ------- PAIEMENT -------
+\subsection*{A.8 Module Paiement (\texttt{/payment})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        POST & \texttt{/payment/create-intent}       & Créer un PaymentIntent Stripe  & Non \\
+        POST & \texttt{/payment/confirm}             & Confirmer le paiement          & Non \\
+        POST & \texttt{/payment/refund}              & Rembourser                     & Non \\
+        GET  & \texttt{/payment/intent/:id}         & Détails d'un PaymentIntent     & Non \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Paiement}
+\end{table}
+
+\textbf{Corps de} \texttt{POST /payment/create-intent} :
+\begin{verbatim}
+{ "orderId": "6981b...", "amount": 59.98, "currency": "eur" }
+\end{verbatim}
+\textbf{Réponse :}
+\begin{verbatim}
+{ "clientSecret": "pi_3O..._secret_...", "paymentIntentId": "pi_3O..." }
+\end{verbatim}
+
+% ------- FICHIERS -------
+\subsection*{A.9 Module Fichiers (\texttt{/files})}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{5.5cm}|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Auth} \\
+        \hline
+        POST & \texttt{/files/upload} & Upload un fichier vers AWS S3 & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Endpoints du module Fichiers}
+\end{table}
+
+\textbf{Form-data :} champ \texttt{file} (binaire) + champ optionnel \texttt{folder} (ex: \texttt{products}).
+
+\textbf{Réponse :}
+\begin{verbatim}
+{ "url": "https://bucket.s3.amazonaws.com/products/1708456723-image.jpg" }
+\end{verbatim}
+
+% ------- CODES ERREUR -------
+\subsection*{A.10 Codes d'erreur HTTP}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|p{10cm}|}
+        \hline
+        \textbf{Code} & \textbf{Signification} \\
+        \hline
+        \texttt{200} & Succès \\
+        \texttt{201} & Ressource créée avec succès \\
+        \texttt{400} & Données invalides / champ manquant dans le body \\
+        \texttt{401} & Token JWT absent, invalide ou expiré \\
+        \texttt{403} & Rôle insuffisant pour accéder à cette ressource \\
+        \texttt{404} & Ressource introuvable (produit, commande, etc.) \\
+        \texttt{500} & Erreur interne du serveur \\
+        \texttt{503} & Microservice ou broker RabbitMQ temporairement indisponible \\
+        \hline
+    \end{tabular}
+    \caption{Codes d'erreur HTTP retournés par l'API Gateway}
+\end{table}

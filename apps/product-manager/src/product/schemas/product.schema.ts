@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Types, Model, FilterQuery } from 'mongoose';
+import { ProductFilters } from '@app/shared';
 
 export type ProductDocument = HydratedDocument<Product>;
 
@@ -59,13 +60,20 @@ ProductSchema.index({
 ProductSchema.index({ price: 1 });
 ProductSchema.index({ category: 1 });
 
-ProductSchema.statics.search = function (query: string, filters: any = {}) {
-  const searchQuery: any = {};
+interface ProductModel extends Model<ProductDocument> {
+  search(query: string, filters?: ProductFilters): Promise<ProductDocument[]>;
+}
+
+ProductSchema.statics.search = function (
+  query: string,
+  filters: ProductFilters = {},
+) {
+  const searchQuery: FilterQuery<ProductDocument> = {};
   if (query) {
     searchQuery.$text = { $search: query };
   }
-  if (filters.category && filters.category.length > 0) {
-    searchQuery.category = { $in: filters.category };
+  if (filters.categories && filters.categories.length > 0) {
+    searchQuery.category = { $in: filters.categories };
   }
   if (filters.minPrice) {
     searchQuery.price = { ...searchQuery.price, $gte: filters.minPrice };

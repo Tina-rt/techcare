@@ -19,6 +19,33 @@
         "tsConfigPath": "libs/database/tsconfig.lib.json"
       }
     },
+    "cart-manager": {
+      "type": "application",
+      "root": "apps/cart-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/cart-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/cart-manager/tsconfig.app.json"
+      }
+    },
+    "order-manager": {
+      "type": "application",
+      "root": "apps/order-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/order-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/order-manager/tsconfig.app.json"
+      }
+    },
+    "payment-manager": {
+      "type": "application",
+      "root": "apps/payment-manager",
+      "entryFile": "main",
+      "sourceRoot": "apps/payment-manager/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/payment-manager/tsconfig.app.json"
+      }
+    },
     "file-manager": {
       "type": "application",
       "root": "apps/file-manager",
@@ -64,13 +91,22 @@
         "tsConfigPath": "apps/techcare/tsconfig.app.json"
       }
     },
-    "utilisateur": {
-      "type": "application",
-      "root": "apps/utilisateur",
-      "entryFile": "main",
-      "sourceRoot": "apps/utilisateur/src",
+    "shared": {
+      "type": "library",
+      "root": "libs/shared",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/utilisateur/tsconfig.app.json"
+        "tsConfigPath": "libs/shared/tsconfig.lib.json"
+      }
+    },
+    "user": {
+      "type": "application",
+      "root": "apps/user",
+      "entryFile": "main",
+      "sourceRoot": "apps/user/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/user/tsconfig.app.json"
       }
     }
   }

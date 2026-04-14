@@ -1,0 +1,644 @@
+\thispagestyle{normalpage}
+
+\begin{center}
+    \large \textbf{CHAPITRE III} \\[0.3em]
+    \large \textbf{RÉALISATION ET MISE EN ŒUVRE TECHNIQUE}
+\end{center}
+\addcontentsline{toc}{chapter}{CHAPITRE III - RÉALISATION}
+\label{page:chapitre3}
+\vspace{1cm}
+
+Ce chapitre décrit l'étape de concrétisation technique de l'architecture conçue précédemment. Nous détaillons ici le stack technologique retenu, les spécificités de l'implémentation de chaque microservice et les défis rencontrés lors de l'intégration.
+
+\section{III.1 Organisation du Projet et Arborescence}
+Afin de gérer efficacement la multiplicité des microservices, le projet est structuré sous forme de \textbf{Monorepo}. Cette organisation permet de centraliser la configuration globale tout en isolant le code de chaque service.
+
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\centering
+\begin{verbatim}
+techcare-root/
+|-- apps/
+|   |-- techcare/ (Gateway)
+|   |-- user/
+|   |-- product-manager/
+|   `-- ... (8 services)
+|-- libs/
+|   |-- database/
+|   `-- shared/ (DTOs, Interfaces, Enums)
+|-- Dockerfile
+`-- docker-compose.yml
+\end{verbatim}
+\caption{Structure globale (Monorepo)}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\begin{verbatim}
+src/ (Microservice)
+|-- domain/
+|   |-- entities/
+|   `-- interfaces/
+|-- application/
+|   `-- services/
+|-- infrastructure/
+|   |-- controllers/
+|   `-- persistence/
+`-- main.ts
+\end{verbatim}
+\caption{Structure d'un service}
+\end{minipage}
+\end{figure}
+
+L'ajout de la bibliothèque \texttt{libs/shared} est un élément crucial de cette organisation. Elle permet de centraliser les définitions de types, les interfaces et les objets de transfert de données (DTOs) utilisés par plusieurs services. Cette approche évite la duplication de code et garantit une synchronisation parfaite des contrats d'interface entre la Gateway et les microservices Backend.
+
+\section{III.2 Environnement Technologique et Outils}
+\label{sec:tools}
+
+Le choix du stack a été dicté par le besoin de performance, de modularité et de rapidité de développement.
+
+\subsection{III.1.1 Framework NestJS}
+NestJS est utilisé comme socle de développement pour tous les microservices. Son architecture modulaire permet de structurer le code de manière prévisible et facilite l'application de l'architecture hexagonale détaillée ci-après.
+
+\subsection{III.1.2 Communication : RabbitMQ}
+RabbitMQ sert de colonne vertébrale à notre système. Il assure le transport des messages entre l'API Gateway et les services Backend de manière asynchrone, garantissant la livraison même en cas de charge élevée.
+
+\textbf{Configuration de base :}
+\begin{verbatim}
+ClientsModule.register([
+  {
+    name: 'PRODUCT_SERVICE',
+    transport: Transport.RMQ,
+    options: {
+      urls: ['amqp://admin:admin@localhost:5672'],
+      queue: 'product_manager_queue',
+      queueOptions: { durable: false }
+    }
+  }
+])
+\end{verbatim}
+
+\subsection{III.1.3 Bases de données et ORM}
+\begin{itemize}
+    \item \textbf{PostgreSQL + Drizzle ORM} : Pour le typage strict et les transactions SQL. Drizzle offre une meilleure expérience développeur que TypeORM avec une syntaxe fluide.
+    \item \textbf{MongoDB + Mongoose} : Pour la flexibilité du stockage documentaire. Le plugin de schéma validation assure l'intégrité malgré le NoSQL.
+\end{itemize}
+
+\subsection{III.2.1 Gestion de la Configuration et des Secrets}
+Dans une architecture microservices, chaque service poss\`ede ses propres param\`etres (identifiants de base de donn\'ees, cl\'es API, URLs). Centraliser ces valeurs en dur dans le code constitue une faille de s\'ecurit\'e critique. Techcare adopte une gestion rigoureuse via le \textbf{ConfigModule} de NestJS et des fichiers \texttt{.env} isol\'es par service.
+
+\begin{verbatim}
+// Fichier .env (non versionné dans Git)
+RABBITMQ_URL=amqp://admin:secret@rabbitmq:5672
+DATABASE_URL=postgresql://user:pass@postgres:5432/db
+JWT_SECRET=super_secret_key_rsa_256
+AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+STRIPE_SECRET_KEY=sk_live_...
+\end{verbatim}
+
+Ces variables sont charg\'ees et valid\'ees au d\'emarrage de chaque service gr\^ace au \texttt{ConfigModule} :
+
+\begin{verbatim}
+// app.module.ts
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,     // Accessible dans tout le service
+      envFilePath: '.env',
+      validationSchema: Joi.object({
+        RABBITMQ_URL: Joi.string().required(),
+        DATABASE_URL: Joi.string().required(),
+        JWT_SECRET: Joi.string().min(32).required(),
+      }),
+    }),
+  ],
+})
+export class AppModule {}
+\end{verbatim}
+
+En production (via Docker Compose), les secrets ne sont jamais cod\'es en dur dans les images. Ils sont inject\'es comme variables d'environnement au moment du lancement des conteneurs, ce qui garantit qu'une image compromise ne r\'ev\`ele aucune donn\'ee sensible :
+
+\begin{verbatim}
+# docker-compose.yml (extrait)
+services:
+  gateway:
+    environment:
+      - JWT_SECRET=${JWT_SECRET}   # Lu depuis le .env
+      - RABBITMQ_URL=${RABBITMQ_URL} # de l'hôte Docker
+\end{verbatim}
+
+
+\section{III.3 Architecture Interne et Patrons de Conception}
+\label{sec:internal_arch}
+
+Au-delà de l'architecture globale distribuée, chaque microservice de Techcare suit une structure interne rigoureuse basée sur les principes de l' ``Architecture Hexagonale`` (ou \textit{Ports and Adapters}). Cette approche garantit que la logique métier reste isolée des préoccupations techniques (base de données, protocoles de communication).
+
+\subsection{III.2.1 Organisation en couches}
+Pour assurer une maintenabilité optimale, nous avons divisé chaque service en trois couches distinctes :
+\begin{enumerate}
+    \item \textbf{Couche Domaine (Cœur)} : Contient les entités métier et la logique pure du projet, sans dépendance externe.
+    \item \textbf{Couche Application} : Regroupe les services qui orchestrent les cas d'usage (ex: \texttt{OrderService}).
+    \item \textbf{Couche Infrastructure} : Gère les détails techniques comme les adaptateurs de base de données (Drizzle, Mongoose) et les clients de messagerie.
+\end{enumerate}
+
+\subsection{III.2.2 Flux de données et DTOs}
+La communication entre ces couches et avec le monde extérieur (API Gateway) est normalisée via des \textbf{DTOs (Data Transfer Objects)}. Initialement dupliqués, ces objets ont été centralisés dans la bibliothèque partagée (\texttt{@app/shared}). Ils assurent la validation des données entrantes grâce à \texttt{class-validator}, garantissant qu'aucune donnée corrompue ne pénètre dans le système. Cette centralisation permet également d'imposer un typage strict sur l'ensemble du Monorepo, éliminant les erreurs de désynchronisation entre services.
+
+\section{III.3.3 Tableau Récapitulatif des Microservices}
+\label{sec:recap_services}
+
+Le tableau suivant synthétise l'ensemble des microservices composant la plateforme Techcare, leurs responsabilités et leurs caractéristiques techniques :
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{2.8cm}|p{2.5cm}|p{2cm}|p{2cm}|p{3.5cm}|}
+        \hline
+        \textbf{Service} & \textbf{Responsabilité} & \textbf{Protocole} & \textbf{Base de données} & \textbf{Événements clés} \\
+        \hline
+        API Gateway & Routage, Auth, CORS & HTTP REST & -- & -- \\
+        \hline
+        User Manager & Authentification, Profils & RabbitMQ & PostgreSQL & \texttt{user.created} \\
+        \hline
+        Product Manager & Catalogue, Catégories & RabbitMQ & MongoDB & \texttt{product.validated} \\
+        \hline
+        Inventory Manager & Stocks, Réservations & RabbitMQ & PostgreSQL & \texttt{stock.reserved}, \texttt{stock.released} \\
+        \hline
+        Order Manager & Commandes, Saga & RabbitMQ & PostgreSQL & \texttt{order.created}, \texttt{order.cancelled} \\
+        \hline
+        Payment Manager & Paiement Stripe & RabbitMQ & -- & \texttt{payment.completed}, \texttt{payment.failed} \\
+        \hline
+        File Manager & Upload S3 & RabbitMQ & -- & -- \\
+        \hline
+        Notification Manager & Emails, Socket.io & RabbitMQ & -- & \texttt{notification.sent} \\
+        \hline
+    \end{tabular}
+    \caption{Récapitulatif des microservices de la plateforme Techcare}
+    \label{tab:microservices_recap}
+\end{table}
+
+\section{III.4 Développement de l'API Gateway}
+\label{sec:gateway_dev}
+
+La Gateway est le point d'entrée HTTP unique. Elle ne se contente pas de router les requêtes, elle joue un rôle actif dans l'orchestration et la sécurisation des flux.
+
+\subsection{III.4.1 Architecture et Responsabilités}
+L'organisation interne de la Gateway suit le modèle MVC de NestJS, mais avec une séparation stricte par domaine :
+\begin{itemize}
+    \item \textbf{CORS et Sécurité} : Centralisation des politiques de partage de ressources et protection contre les attaques courantes.
+    \item \textbf{Gestion des Sessions} : Validation des tokens JWT et extraction des claims.
+    \item \textbf{Normalisation} : Transformation des exceptions microservices (RPC) en codes HTTP standard.
+\end{itemize}
+
+Le point d'entrée de la Gateway (\texttt{main.ts}) illustre la configuration centralisée de ces responsabilités :
+
+\begin{verbatim}
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // CORS : Autorisation des origines front-end
+  app.enableCors({ origin: process.env.FRONTEND_URL });
+
+  // Filtre global : Conversion RpcException -> HTTP
+  app.useGlobalFilters(new RpcExceptionFilter());
+
+  // Validation globale des DTOs entrants
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+  await app.listen(3000);
+}
+bootstrap();
+\end{verbatim}
+
+\subsection{III.4.2 Coordination Inter-services}
+L'un des rôles clés de la Gateway est de coordonner les services. Par exemple, lors de la création d'un produit avec image, la Gateway orchestre d'abord l'upload vers le \textit{File Manager} avant de transmettre l'URL finale au \textit{Product Manager}.
+
+\begin{verbatim}
+async create(data: CreateProductDto, image?: Express.Multer.File) {
+  let imageUrl = '';
+  if (image) {
+    // Étape 1 : Coordination avec le File Manager service
+    const uploadResult = await this.fileService.uploadFile(image, 'products');
+    imageUrl = uploadResult.url;
+  }
+  // Étape 2 : Envoi au Product Manager avec l'URL du média
+  return lastValueFrom(
+    this.productClient.send('create_product', { ...data, image: imageUrl })
+  );
+}
+\end{verbatim}
+
+\subsection{III.4.3 Gestion des Exceptions (RpcExceptionFilter)}
+Comme les microservices communiquent via RabbitMQ, les erreurs ne sont pas des erreurs HTTP classiques. Pour garantir une expérience utilisateur cohérente, nous avons implémenté un filtre global capable de parser les erreurs complexes renvoyées par les microservices via RPC.
+
+\begin{verbatim}
+@Catch()
+export class RpcExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal server error';
+
+    if (exception && typeof exception === 'object') {
+      const errorResponse = exception as MicroserviceError;
+      // Extraction du message et du code statut
+      status = Number(errorResponse.statusCode || errorResponse.status) 
+               || status;
+      message = errorResponse.message || message;
+    }
+
+    response.status(status).json({
+      statusCode: status,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+\end{verbatim}
+
+Grâce à ce filtre, une exception levée par un microservice (ex: \texttt{throw new RpcException(\{statusCode: 404, message: 'Introuvable'\})}) est automatiquement convertie en une réponse HTTP 404 propre.
+
+Grâce à ce filtre, une exception levée par un microservice (ex: \texttt{throw new RpcException(\{statusCode: 404, message: 'Produit introuvable'\})}) est automatiquement retournée au client sous forme d'une réponse HTTP 404 propre, sans exposer les détails internes du broker.
+
+\subsection{III.4.4 Contrat d'API : Référence des Endpoints}
+La Gateway expose un ensemble d'endpoints REST cohérents, organisés par domaine métier. Le tableau ci-dessous présente une synthèse du contrat d'API de Techcare. La documentation complète avec les corps de requêtes et réponses est disponible en Annexe~\ref{annexe:api}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|c|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Description} & \textbf{Authentification Requis} \\
+        \hline
+        POST & \texttt{/auth/signup} & Inscription utilisateur & Non \\
+        POST & \texttt{/auth/signin} & Connexion, retourne un JWT & Non \\
+        GET  & \texttt{/auth/me} & Profil de l'utilisateur connecté & Oui \\
+        \hline
+        GET  & \texttt{/products} & Liste du catalogue & Non \\
+        GET  & \texttt{/products/:id} & Détail d'un produit & Non \\
+        POST & \texttt{/products} & Créer un produit (+ image S3) & Oui \\
+        PUT  & \texttt{/products/:id} & Mettre à jour un produit & Oui \\
+        DELETE & \texttt{/products/:id} & Supprimer un produit & Oui \\
+        \hline
+        GET  & \texttt{/category} & Liste des catégories & Non \\
+        POST & \texttt{/category} & Créer une catégorie & Oui \\
+        PUT  & \texttt{/category/:id} & Modifier une catégorie & Oui \\
+        \hline
+        GET  & \texttt{/inventory/:productId} & Stock d'un produit & Non \\
+        POST & \texttt{/inventory/update} & Mettre à jour le stock & Oui \\
+        \hline
+        POST & \texttt{/cart/add} & Ajouter au panier & Non \\
+        GET  & \texttt{/cart/:userId} & Consulter le panier & Non \\
+        PUT  & \texttt{/cart/update} & Modifier la quantité & Non \\
+        DELETE & \texttt{/cart/clear/:userId} & Vider le panier & Non \\
+        \hline
+        POST & \texttt{/order/create} & Créer une commande (Saga) & Non \\
+        GET  & \texttt{/order/user/:userId} & Commandes d'un utilisateur & Non \\
+        PUT  & \texttt{/order/status} & Modifier le statut & Non \\
+        PUT  & \texttt{/order/cancel/:id} & Annuler (compensation Saga) & Non \\
+        \hline
+        POST & \texttt{/payment/create-intent} & Créer un PaymentIntent Stripe & Non \\
+        POST & \texttt{/payment/confirm} & Confirmer le paiement & Non \\
+        POST & \texttt{/payment/refund} & Rembourser & Non \\
+        \hline
+        POST & \texttt{/files/upload} & Upload d'un fichier vers S3 & Oui \\
+        \hline
+    \end{tabular}
+    \caption{Référence synthétique des endpoints de l'API Gateway Techcare}
+    \label{tab:api_endpoints}
+\end{table}
+
+
+\newpage
+
+\textbf{Exemple 1 : Authentification (POST \texttt{/auth/signin})}
+
+Le frontend envoie les identifiants et reçoit le JWT à stocker localement :
+\begin{verbatim}
+// Requête
+POST http://localhost:4000/auth/signin
+Content-Type: application/json
+{ "email": "pharmacien@techcare.mg", "password": "secret" }
+
+// Réponse 200 OK
+{ "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." }
+\end{verbatim}
+
+\textbf{Exemple 2 : Création de commande (POST \texttt{/order/create})}
+
+Cet appel déclenche la Saga de compensation et retourne immédiatement un ack :
+\begin{verbatim}
+// Requête
+POST http://localhost:4000/order/create
+Content-Type: application/json
+{
+  "userId": "6502d...",
+  "shippingAddress": {
+    "fullName": "Jean Dupont", "address": "12 Rue de la Paix",
+    "city": "Paris", "postalCode": "75001", "country": "France"
+  }
+}
+
+// Réponse 201 Created
+{ "_id": "6981b...", "status": "PENDING", "createdAt": "2026-02-20T..." }
+\end{verbatim}
+
+\section{III.5 Implémentation des Microservices Core}
+
+\label{sec:microservices_impl}
+
+\subsection{III.5.1 Product Manager : Catalogue et Catégories}
+Ce service implémente un CRUD complet pour les produits et les catégories. Chaque méthode est exposée via MessagePattern :
+
+\begin{verbatim}
+@MessagePattern('create_product')
+async handleCreateProduct(@Payload() data) {
+  return this.productService.create(data);
+}
+\end{verbatim}
+
+\subsection{III.5.2 Inventory Manager : Transactions PostgreSQL}
+L'utilisation de Drizzle garantit le typage strict :
+
+\begin{verbatim}
+async updateStock(productId: string, quantity: number) {
+  const [result] = await this.db
+    .update(inventory)
+    .set({ quantity: sql`${inventory.quantity} - ${quantity}` })
+    .where(eq(inventory.productId, productId))
+    .returning();
+  return result;
+}
+\end{verbatim}
+
+\subsection{III.5.3 File Manager : Stockage S3}
+Le service File Manager illustre un défi technique propre aux microservices : RabbitMQ transporte les données binaires (fichiers image) sous forme de tableaux d'octets sérialisés, qu'il faut reconstruire côté serveur avant l'envoi à AWS S3.
+
+\begin{verbatim}
+// file.service.ts
+async uploadFile(
+  file: { buffer: Buffer | number[]; originalname: string },
+  folder: string
+): Promise<{ url: string }> {
+
+  // Étape 1 : Reconstruction du Buffer depuis RabbitMQ
+  // (les Buffers sont sérialisés en tableau d'octets)
+  const buffer = Buffer.isBuffer(file.buffer)
+    ? file.buffer
+    : Buffer.from(file.buffer);
+
+  // Étape 2 : Génération d'une clé unique horodatée
+  const key = `${folder}/${Date.now()}-${file.originalname}`;
+
+  // Étape 3 : Upload vers AWS S3
+  await this.s3Client.send(new PutObjectCommand({
+    Bucket: this.configService.get('AWS_BUCKET_NAME'),
+    Key: key,
+    Body: buffer,
+    ContentType: 'image/jpeg',
+  }));
+
+  // Étape 4 : Retour de l'URL publique
+  return {
+    url: `https://${this.configService.get(
+      'AWS_BUCKET_NAME'
+    )}.s3.amazonaws.com/${key}`
+  };
+}
+\end{verbatim}
+
+\subsection{III.5.4 Order Manager et la Saga de Compensation}
+Le service \textbf{Order Manager} est le pivot de la gestion transactionnelle distribu\'ee. Il joue le rôle d'initiateur de la Saga, coordinant les services Inventory et Payment via des \'ev\'enements RabbitMQ.
+
+\textbf{Impl\'ementation du Happy Path :}
+Lors d'une commande, l'Order Manager \'emet un \'ev\'enement \texttt{order.product\_check} que le Product Service consomme :
+
+\begin{verbatim}
+// order.service.ts
+async createOrder(dto: CreateOrderDto): Promise<Order> {
+  const order = await this.orderRepo.save({
+    ...dto, status: 'PENDING'
+  });
+
+  // Étape 1 : Déclenchement de la Saga
+  this.orderClient.emit('order.product_check', {
+    orderId: order.id,
+    productId: dto.productId,
+    quantity: dto.quantity,
+  });
+  return order; // Réponse immédiate au client
+}
+\end{verbatim}
+
+\textbf{Impl\'ementation des transactions compensatoires :}
+Si le \texttt{PaymentService} \'echoue, il \'emet un \'ev\'enement \texttt{order.payment\_failed}. L'Order Manager l'\'ecoute et d\'eclenche la compensation en cascade :
+
+\begin{verbatim}
+// order.controller.ts
+@EventPattern('order.payment_failed')
+async handlePaymentFailed(
+    @Payload() data: { orderId: string; reason: string }
+) {
+  // Mise à jour du statut local
+  await this.orderService.updateStatus(
+    data.orderId, 'CANCELLED'
+  );
+
+  // Émission de la compensation vers InventoryService
+  this.inventoryClient.emit('inventory.release_stock', {
+    orderId: data.orderId,
+  });
+
+  // Notification d'échec au client
+  this.notifClient.emit('notification.order_failed', {
+    orderId: data.orderId,
+    reason: data.reason,
+  });
+}
+\end{verbatim}
+
+Du côté de l'\textbf{Inventory Service}, la transaction compensatoire lib\`ere le stock r\'eserv\'e :
+
+\begin{verbatim}
+// inventory.controller.ts
+@EventPattern('inventory.release_stock')
+async handleReleaseStock(
+    @Payload() data: { orderId: string }
+) {
+  const reservation = await this.reservationRepo
+    .findOne(data.orderId);
+
+  if (reservation) {
+    // Annulation : incrémentation du stock
+    await this.db.update(inventory)
+      .set({
+        quantity: sql`${inventory.quantity}
+          + ${reservation.quantity}`
+      })
+      .where(eq(inventory.productId,
+        reservation.productId));
+
+    await this.reservationRepo.delete(data.orderId);
+  }
+}
+\end{verbatim}
+
+Ce m\'ecanisme garantit qu'\`a tout moment, même en cas de d\'efaillance d'un service, les donn\'ees restent coh\'erentes à travers l'ensemble de l'architecture.
+
+\subsection{III.5.5 Payment Manager et Notification Manager}
+Pour assurer la compl\'etude fonctionnelle de la plateforme, d'autres services sp\'ecialis\'es ont \'et\'e impl\'ement\'es :
+\begin{itemize}
+    \item \textbf{Payment Manager} : Consomme l'\'ev\'enement \texttt{order.stock\_reserved} et int\`egre l'API Stripe pour traiter le paiement. En cas de succ\`es, il \'emet \texttt{order.payment\_completed} ; en cas d'\'echec, il \'emet \texttt{order.payment\_failed}.
+    \item \textbf{Notification Manager} : Consomme les \'ev\'enements finaux (succ\`es ou \'echec) pour avertir le client par email (via Nodemailer) et par notification en temps r\'eel (via Socket.io).
+\end{itemize}
+
+\section{III.6 Sécurisation et Gestion des Accès}
+\label{sec:security_impl}
+
+La sécurité dans une architecture distribuée repose sur le principe de l'authentification \textit{Stateless}. Nous avons implémenté un système basé sur les standards JWT (JSON Web Token) et le contrôle d'accès par rôles (RBAC).
+
+\subsection{III.6.1 Stratégie d'Authentification JWT}
+L'authentification est centralisée au niveau de l'API Gateway. Lorsqu'un utilisateur se connecte, le \textbf{User Service} valide les identifiants et génère un jeton signé via le \texttt{JwtStrategy} de NestJS Passport :
+
+\begin{verbatim}
+// jwt.strategy.ts (dans user-manager)
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private config: ConfigService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: config.get('JWT_SECRET'),
+    });
+  }
+
+  // Appelée automatiquement si la signature est valide
+  async validate(payload: JwtPayload) {
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    };
+  }
+}
+\end{verbatim}
+
+Ce jeton contient des \textit{claims} (identité de l'utilisateur, rôles) qui permettent aux microservices de vérifier l'autorité sans interroger la base de données à chaque requête.
+
+\subsection{III.6.2 Contrôle d'accès par rôles (RBAC)}
+Pour protéger les ressources sensibles (ex: modification de stock par un pharmacien), nous utilisons les \textbf{Guards} de NestJS. Un décorateur personnalisé \texttt{@Roles} permet de définir les permissions directement sur les contrôleurs.
+
+\begin{verbatim}
+// Exemple de protection d'une route par rôle
+@Roles(Role.PHARMACIST, Role.ADMIN)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Patch(':id/stock')
+updateStock(@Param('id') id: string, @Body() dto: UpdateStockDto) {
+  return this.inventoryService.update(id, dto);
+}
+\end{verbatim}
+
+\subsection{III.6.3 Propagation de l'identité}
+Dans notre architecture, l'API Gateway agit comme un portier. Une fois le token validé, l'identité est injectée directement dans le payload du message RabbitMQ transmis au microservice :
+
+\begin{verbatim}
+// orders.controller.ts (dans l'API Gateway)
+@Get('my-orders')
+@UseGuards(JwtAuthGuard)
+async getMyOrders(@Request() req) {
+  // req.user est peuplé par JwtAuthGuard
+  return lastValueFrom(
+    this.orderClient.send('get_orders_by_user', {
+      userId: req.user.userId, // Identité propagée
+      role:   req.user.role,
+    })
+  );
+}
+\end{verbatim}
+
+Côté \textbf{Order Manager}, le microservice extrait \texttt{userId} directement depuis le \texttt{@Payload()} et l'utilise pour filtrer les données, garantissant qu'un client ne peut accéder qu'à ses propres commandes :
+
+\begin{verbatim}
+// orders.controller.ts (dans order-manager)
+@MessagePattern('get_orders_by_user')
+async handleGetOrders(
+    @Payload() data: { userId: string; role: string }
+) {
+  // Filtrage strict par identité propagée
+  return this.orderService.findByUser(data.userId);
+}
+\end{verbatim}
+
+\section{III.7 Orchestration et DevOps}
+\label{sec:devops}
+
+\subsection{III.6.1 Construction des images : Multi-stage Building}
+Afin d'optimiser le poids des images de production et la sécurité, nous avons mis en place un \textit{Dockerfile} utilisant le multi-stage building. Cette technique permet de séparer l'environnement de compilation (avec tous les outils de build) de l'environnement d'exécution (contenant uniquement le nécessaire).
+
+\begin{verbatim}
+# Étape 1 : Construction (Builder)
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+ARG APP_NAME
+RUN npm run build ${APP_NAME}
+
+# Étape 2 : Exécution (Runtime)
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+RUN npm install --only=production
+COPY --from=builder /app/dist/apps/${APP_NAME} ./dist
+CMD ["node", "dist/main"]
+\end{verbatim}
+
+\subsection{III.6.2 Orchestration : Docker Compose}
+Un fichier \texttt{docker-compose.yml} centralise la gestion de l'infrastructure et des microservices. Il définit les réseaux isolés et les volumes persistants pour les bases de données.
+
+\begin{verbatim}
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: ['5672:5672', '15672:15672']
+  mongodb:
+    image: mongo:latest
+    volumes: ['mongodb_data:/data/db']
+  postgres:
+    image: postgres:15-alpine
+    volumes: ['postgres_data:/var/lib/postgresql/data']
+  
+  # Exemple d'un service applicatif
+  gateway:
+    build: { context: ., args: { APP_NAME: techcare } }
+    depends_on: [rabbitmq]
+    networks: [techcare_network]
+\end{verbatim}
+
+\subsection{III.6.3 Workflow de développement}
+Pour faciliter le travail quotidien, nous avons configuré un script de lancement unifié utilisant l'outil \texttt{concurrently}. Cela permet de démarrer l'ensemble des 9 services (Gateway + 8 microservices) en une seule commande, tout en conservant les logs colorisés pour chaque domaine.
+
+\begin{verbatim}
+"dev": "concurrently -n \"gateway,user,product,notif,file,inv,...\" 
+  \"npm run start:dev techcare\" 
+  \"npm run start:dev user\" 
+  \"npm run start:dev product-manager\" 
+  ... "
+\end{verbatim}
+
+\newpage
+
+\section{III.8 Stratégie de Test et Validation}
+\label{sec:testing}
+
+La validation repose sur trois niveaux :
+\begin{enumerate}
+    \item \textbf{Tests Unitaires (Jest)} : Chaque service possède sa suite de tests
+    \item \textbf{Tests d'Intégration} : Vérification des communications RabbitMQ
+    \item \textbf{Tests E2E} : Simulation de parcours utilisateur complets
+\end{enumerate}
+
+\section*{Conclusion partielle}
+Ce troisième chapitre a concrétisé la vision architecturale par une implémentation rigoureuse utilisant des technologies de pointe. L'adoption du stack NestJS, RabbitMQ et Docker a permis de surmonter les défis de communication et de déploiement propres aux systèmes distribués. Les tests validant le bon fonctionnement de l'ensemble, nous disposons désormais d'une plateforme fonctionnelle, agile et prête pour les évolutions futures de Techcare.

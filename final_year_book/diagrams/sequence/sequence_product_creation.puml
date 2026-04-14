@@ -1,0 +1,51 @@
+@startuml sequence_product_creation
+!theme plain
+autonumber
+
+actor "Administrateur/Pharmacien" as Admin
+participant "API Gateway" as Gateway
+participant "Product Service" as ProductSrv
+participant "File Service" as FileSrv
+participant "Notification Service" as Notif
+database "MongoDB" as ProductDB
+queue "RabbitMQ" as MQ
+
+title Diagramme de séquence : Création de Produit avec Image
+
+Admin -> Gateway : POST /products (Form Data + Image)
+activate Gateway
+
+Gateway -> Gateway : Valider JWT (AuthGuard)
+
+== Étape 1 : Upload de l'image ==
+Gateway -> MQ : publish(upload_file)
+activate MQ
+MQ -> FileSrv : consume(upload_file)
+activate FileSrv
+FileSrv -> FileSrv : Upload vers AWS S3
+FileSrv --> MQ : file_uploaded(url)
+deactivate FileSrv
+
+== Étape 2 : Enregistrement du produit ==
+MQ -> ProductSrv : consume(create_product, data, imageUrl)
+activate ProductSrv
+ProductSrv -> ProductDB : Insert Product JSON
+activate ProductDB
+ProductDB --> ProductSrv : Success
+deactivate ProductDB
+ProductSrv --> MQ : product_created(id)
+deactivate ProductSrv
+
+== Étape 3 : Notification ==
+MQ -> Notif : consume(product_created)
+activate Notif
+Notif -> Admin : broadcastNotification("Nouveau produit disponible")
+deactivate Notif
+
+MQ --> Gateway : Response: { status: "created", productId: "..." }
+deactivate MQ
+
+Gateway --> Admin : 201 Created
+deactivate Gateway
+
+@enduml

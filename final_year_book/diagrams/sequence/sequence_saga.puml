@@ -1,0 +1,80 @@
+@startuml sequence_order_saga
+!theme plain
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 200
+skinparam sequenceParticipant underline
+
+actor Client
+participant "API Gateway" as Gateway
+participant "Product Service" as Product
+participant "Inventory Service" as Inventory
+participant "Payment Service" as Payment
+participant "Notification Service" as Notif
+queue "RabbitMQ" as MQ
+
+title Saga de commande - Flux complet avec compensation
+
+== Phase 1 : Validation du produit ==
+Client -> Gateway : POST /orders\n{productId, quantity}
+activate Gateway
+Gateway -> Gateway : Vérifier JWT
+Gateway -> MQ : publish(validate_product)
+activate MQ
+MQ -> Product : consume(validate_product)
+activate Product
+Product -> Product : checkAvailability()
+Product -> MQ : publish(product_validated)
+deactivate Product
+MQ --> Gateway : product_validated event
+Gateway --> Client : 202 Accepted\n{orderId, status: "processing"}
+deactivate Gateway
+
+== Phase 2 : Réservation du stock ==
+MQ -> Inventory : consume(product_validated)
+activate Inventory
+Inventory -> Inventory : reserveStock()
+alt Stock disponible
+    Inventory -> MQ : publish(stock_reserved)
+    note right: Événement: StockReserved\n{orderId, productId, quantity}
+else Stock insuffisant
+    Inventory -> MQ : publish(stock_unavailable)
+    Inventory --> Notif : Notification échec
+    deactivate Inventory
+    note right: Compensation automatique
+end
+
+== Phase 3 : Traitement du paiement ==
+MQ -> Payment : consume(stock_reserved)
+activate Payment
+Payment -> Payment : processPayment()
+alt Paiement réussi
+    Payment -> MQ : publish(payment_completed)
+    note right: Transaction validée
+else Paiement échoué
+    Payment -> MQ : publish(payment_failed)
+    deactivate Payment
+    
+    == Compensation : Libération du stock ==
+    MQ -> Inventory : consume(payment_failed)
+    activate Inventory
+    Inventory -> Inventory : releaseStock()
+    Inventory -> MQ : publish(stock_released)
+    deactivate Inventory
+    
+    MQ -> Notif : consume(payment_failed)
+    activate Notif
+    Notif -> Client : Email/SMS échec
+    deactivate Notif
+end
+
+== Phase 4 : Confirmation finale ==
+MQ -> Notif : consume(payment_completed)
+activate Notif
+Notif -> Client : Email/SMS confirmation
+Notif -> Notif : sendWebSocketNotification()
+Notif --> Client : WebSocket: order_confirmed
+deactivate Notif
+deactivate MQ
+
+@enduml

@@ -6,17 +6,27 @@ import {
   integer,
   boolean,
 } from 'drizzle-orm/pg-core';
-import { defineRelations } from 'drizzle-orm';
-import { user, type NewUser } from './schemas/user.schema';
+import { relations } from 'drizzle-orm';
+import { user, type NewUser, type User } from './schemas/user.schema';
 import { address } from './schemas/address.schema';
+import {
+  inventory,
+  type Inventory,
+  type NewInventory,
+} from './schemas/inventory.schema';
 
-export const userRelations = defineRelations({ user, address }, (r) => ({
-  address: {
-    user: r.one.user({
-      from: r.address.userId,
-      to: r.user.id,
-    }),
-  },
+export const userRelations = relations(user, ({ one }) => ({
+  address: one(address, {
+    fields: [user.id],
+    references: [address.userId],
+  }),
+}));
+
+export const addressRelations = relations(address, ({ one }) => ({
+  user: one(user, {
+    fields: [address.userId],
+    references: [user.id],
+  }),
 }));
 
 export const notification = pgTable('notification', {
@@ -31,4 +41,6 @@ export const notification = pgTable('notification', {
 export type Notification = typeof notification.$inferSelect;
 export type NewNotification = typeof notification.$inferInsert;
 
-export { user, type NewUser };
+export { user, type NewUser, type User };
+export { inventory, type Inventory, type NewInventory };
+export { address };

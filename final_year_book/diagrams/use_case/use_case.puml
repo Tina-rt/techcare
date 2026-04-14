@@ -1,0 +1,62 @@
+@startuml use_case_techcare
+!theme plain
+skinparam packageStyle rectangle
+
+left to right direction
+
+actor "Client" as client
+actor "Pharmacien" as pharmacist
+actor "Administrateur" as admin
+actor "Service de Paiement" as stripe <<System>>
+
+rectangle "Système Techcare" {
+  usecase "Consulter catalogue" as UC1
+  usecase "Rechercher produit" as UC2
+  usecase "Passer commande" as UC3
+  usecase "S'authentifier" as UC4
+  usecase "Gérer stock" as UC5
+  usecase "Gérer produits" as UC6
+  usecase "Gérer utilisateurs" as UC7
+  usecase "Gérer catégories" as UC8
+  usecase "Uploader images" as UC9
+  usecase "Consulter historique" as UC10
+  usecase "Recevoir notifications" as UC11
+  usecase "Payer commande" as UC12
+}
+
+' Relations Client
+client --> UC1
+client --> UC2
+client --> UC3
+client --> UC4
+client --> UC10
+client --> UC11
+client --> UC12
+
+' Relations Pharmacien
+pharmacist --> UC4
+pharmacist --> UC5
+pharmacist --> UC6
+pharmacist --> UC9
+pharmacist --> UC10
+
+' Relations Administrateur
+admin --> UC4
+admin --> UC5
+admin --> UC6
+admin --> UC7
+admin --> UC8
+admin --> UC9
+
+' Relations Système de Paiement
+UC12 -- stripe
+
+' Dépendances
+UC3 ..> UC4 : <<include>>
+UC3 ..> UC12 : <<include>>
+UC5 ..> UC4 : <<include>>
+UC6 ..> UC4 : <<include>>
+UC7 ..> UC4 : <<include>>
+UC6 ..> UC9 : <<extend>>
+
+@enduml

@@ -1,0 +1,382 @@
+\thispagestyle{normalpage}
+
+\begin{center}
+    \large \textbf{CHAPITRE II} \\[0.3em]
+    \large \textbf{ANALYSE ET CONCEPTION : VERS UNE ARCHITECTURE DISTRIBUÉE}
+\end{center}
+\addcontentsline{toc}{chapter}{CHAPITRE II - ANALYSE ET CONCEPTION}
+\label{page:chapitre2}
+
+Ce chapitre expose la réflexion conceptuelle menée pour répondre aux exigences de scalabilité et de haute disponibilité de Techcare. Nous y abordons les fondements théoriques des systèmes distribués, le découpage métier via le Domain-Driven Design (DDD) et la modélisation des flux de données.
+
+\section{II.1 Analyse de l'existant et État de l'Art}
+\label{sec:analyse_art}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{diagrams/use_case/use_case.png}
+    \caption{Diagramme de cas d'utilisation du système Techcare}
+    \label{fig:use_case}
+\end{figure}
+
+L'analyse de ce diagramme de cas d'utilisation permet de dégager les points suivants :
+\begin{itemize}
+    \item \textbf{Interactions et Acteurs} : Ce diagramme illustre les interactions fondamentales entre les trois acteurs principaux (Client, Pharmacien et Administrateur) et les fonctionnalités clés, couvrant l'intégralité du cycle de vie médical, de la recherche à la délivrance.
+    \item \textbf{Périmètre et Dépendances} : Il met en évidence les relations de dépendance, notamment l'authentification systématique requise pour les actions sensibles, et sert de base pour définir le périmètre fonctionnel du système Techcare.
+\end{itemize}
+
+
+\subsection{II.1.1 Évolution des architectures logicielles : Un parcours historique}
+L'histoire de l'ingénierie logicielle est marquée par une oscillation constante entre centralisation et décentralisation, motivée par la recherche d'un équilibre entre contrôle, performance et agilité.
+
+\begin{enumerate}
+    \item \textbf{L'ère des Mainframes (années 1960-1980)} : Le calcul était totalement centralisé sur des machines massives. Les utilisateurs interagissaient via des "terminaux passifs" sans puissance de calcul propre. Bien que robuste, ce modèle offrait une flexibilité nulle et un coût d'entrée prohibitif.
+    
+    \item \textbf{L'ère Client-Serveur (années 1990)} : Avec l'avènement du PC, l'intelligence a été répartie. Le modèle \textit{2-tier} (une application lourde communiquant avec une base de données) a permis l'essor des interfaces graphiques complexes, mais posait des problèmes majeurs de maintenance (chaque mise à jour nécessitait une réinstallation sur chaque poste client).
+    
+    \item \textbf{L'Architecture N-tier et le Monolithe Web (années 2000)} : Pour résoudre les problèmes du client-serveur, le calcul est revenu vers le centre (serveur d'application), mais de manière structurée en couches (Présentation, Métier, Données). C'est l'âge d'or des architectures monolithiques bien structurées, où l'intégralité de la logique réside dans un unique bloc déployable.
+    
+    \item \textbf{SOA (Service-Oriented Architecture)} : Avant les microservices, la SOA a tenté de modulariser l'entreprise. En utilisant des protocoles lourds (SOAP, XML) et un bus de communication central (ESB), elle visait la réutilisabilité. Cependant, la complexité de l'ESB créait souvent un nouveau goulot d'étranglement centralisé.
+    
+    \item \textbf{La révolution des Microservices et du Cloud (2010-Aujourd'hui)} : En réponse aux besoins de "Scale" des géants du web (Netflix, Amazon), le concept de microservices a émergé. Il prône un découplage total, où chaque service est une unité autonome.
+\end{enumerate}
+
+Le passage du monolithe aux microservices chez Techcare n'est donc pas une simple tendance, mais l'aboutissement de cette évolution vers la décentralisation contrôlée, répondant à la **loi de Conway** : pour que Techcare soit agile, son architecture doit refléter une structure de communication fluide et distribuée.
+
+
+\subsection{II.1.2 L'Architecture Monolithique : Analyse du Modèle Traditionnel}
+L'architecture monolithique constitue le modèle canonique de conception logicielle. Bien qu'aujourd'hui souvent critiquée face à l'essor des microservices, elle a dominé l'industrie pendant des décennies et reste pertinente pour nombre de projets. Pour Techcare, comprendre ses mécanismes est crucial pour justifier la transition.
+
+\subsubsection{II.1.2.1 Caractéristiques et Modèle de Déploiement}
+Dans un système monolithique, l'intégralité de la logique métier, de l'accès aux données et de l'interface est compilée dans un unique artefact exécutable. Cette structure implique plusieurs contraintes techniques :
+\begin{itemize}
+    \item \textbf{Couplage Spatial et Temporel} : Tous les composants s'exécutent dans le même espace mémoire et partagent le même cycle de vie. Un redémarrage du serveur pour mettre à jour le module de facturation rend momentanément indisponible le catalogue de médicaments.
+    \item \textbf{Gestion des Ressources Partagées} : Le moteur d'exécution (JVM, Node.js, etc.) gère un pool de threads unique. Une boucle infinie ou une fuite de mémoire dans un composant "non critique" peut saturer les ressources et provoquer l'arrêt total du système.
+    \item \textbf{Base de données Centralisée} : Le monolithe communique généralement avec un unique schéma relationnel (Shared Database), facilitant les jointures complexes mais créant un point de contention majeur lors de la montée en charge.
+\end{itemize}
+
+\subsubsection{II.1.2.2 Atouts Techniques et Opérationnels}
+Avant d'atteindre ses limites, le monolithe offre des avantages indéniables :
+\begin{itemize}
+    \item \textbf{Intégrité Transactionnelle (ACID)} : Les opérations inter-modules bénéficient de transactions locales garanties par le moteur de base de données, évitant la complexité des transactions distribuées (Saga).
+    \item \textbf{Latence Zéro Inter-Composants} : Les échanges d'informations se font par passage de références en mémoire. Contrairement aux microservices, il n'y a ni sérialisation (JSON/Protobuf), ni latence réseau, ni risque de timeout entre les fonctions.
+    \item \textbf{Facilité de Refactoring} : Grâce au typage fort et à la vision globale du code, les outils de l'IDE permettent de renommer ou de restructurer des composants à travers toute l'application en une seule opération sécurisée.
+\end{itemize}
+
+\subsubsection{II.1.2.3 Limites Structurelles et le phénomène "Big Ball of Mud"}
+Pour Techcare, le monolithe a fini par dériver vers ce que Brian Foote et Joseph Yoder appellent une **"Big Ball of Mud"** (grosse boule de boue) : une architecture sans structure apparente où le couplage devient si dense que toute modification devient imprévisible.
+\begin{itemize}
+    \item \textbf{Lourdeur du Continuous Deployment (CD)} : Le temps de build augmente de manière exponentielle avec la taille du projet. Pour Techcare, déployer un correctif mineur prenait plus de 30 minutes, incluant l'exécution de milliers de tests sans rapport avec le changement.
+    \item \textbf{Scalabilité Inefficace} : La scalabilité est obligatoirement "homogène". Pour absorber un pic de trafic sur la recherche de médicaments, nous devions dupliquer l'intégralité du socle (incluant les modules lourds et inutilisés en lecture seule), entraînant un surcoût d'infrastructure inutile.
+    \item \textbf{Obsolescence Technologique Subie} : Le système est "prisonnier" de ses choix initiaux. Passer d'une version majeure de framework ou changer de langage est une mission quasi-impossible car elle impacterait des millions de lignes de code interdépendantes.
+\end{itemize}
+
+
+\section{II.2 Fondements Théoriques et Contraintes Distribuées}
+\label{sec:theorie}
+
+\subsection{II.2.1 Le Théorème CAP : Le dilemme de la distribution}
+Formulé par Eric Brewer, le théorème CAP stipule que pour un système informatique distribué, il est impossible de garantir simultanément plus de deux des trois propriétés suivantes :
+\begin{itemize}
+    \item \textbf{Consistance (Consistency)} : Tous les nœuds voient les mêmes données au même moment.
+    \item \textbf{Disponibilité (Availability)} : Chaque requête reçoit une réponse (succès ou échec), sans garantie qu'elle contienne la version la plus récente.
+    \item \textbf{Partition Tolerance} : Le système continue de fonctionner malgré la perte de messages ou la défaillance d'une partie du réseau.
+\end{itemize}
+
+Pour Techcare, notre choix s'est porté sur une architecture **AP (Availability and Partition Tolerance)**. Dans un contexte pharmaceutique, il est préférable qu'un client puisse consulter le catalogue de médicaments (quitte à voir un stock légèrement désynchronisé de quelques secondes) plutôt que de se confronter à une erreur 500 bloquante. Nous adoptons donc le modèle de \textbf{Consistance Éventuelle} (\textit{Eventual Consistency}), où les données se propagent de manière asynchrone via RabbitMQ.
+
+\subsection{II.2.2 Patterns de Résilience : Prévenir l'effet domino}
+L'architecture distribuée multiplie les points de défaillance réseau. Pour éviter qu'une panne isolée ne paralyse tout le système, nous avons implémenté :
+\begin{itemize}
+    \item \textbf{Circuit Breaker (Disjoncteur)} : Ce pattern surveille les échecs d'un service distant. S'ils dépassent un seuil, le disjoncteur "s'ouvre" et redirige immédiatement les appels vers un mode dégradé (ex: cache ou message d'erreur rapide), évitant ainsi d'épuiser les ressources du client en attendant un timeout.
+    \item \textbf{Retry Pattern} : Pour les erreurs transitoires (micro-coupures réseau), le système réessaye automatiquement la requête avec une stratégie d'\textit{Exponential Backoff} pour ne pas saturer le service cible.
+    \item \textbf{Bulkhead} : Inspiré des compartiments étanches des navires, ce pattern isole les pools de threads par service. Une saturation du \textit{Payment Service} n'impactera pas les performances du \textit{Product Service}.
+\end{itemize}
+
+\section{II.3 Découpage Métier : Le Domain-Driven Design (DDD)}
+\label{sec:ddd_advanced}
+
+Le Domain-Driven Design est au cœur de notre stratégie de décomposition. Il permet de s'assurer que le code reflète fidèlement la complexité métier.
+\begin{itemize}
+    \item \textbf{Bounded Contexts (Contextes Délimités)} : C'est la pierre angulaire de notre architecture. Au lieu d'avoir un modèle "Produit" géant, nous avons fragmenté ce concept. Dans le \textit{Catalog Context}, le produit est défini par son marketing (images, description). Dans l'\textit{Inventory Context}, il est défini par sa logistique (code-barres, emplacement, seuil d'alerte).
+    \item \textbf{Ubiquitous Language (Langage Commun)} : Nous avons banni le jargon technique pur pour utiliser les termes des pharmaciens (ex: "Posologie", "Rupture de stock", "Délivrance") directement dans le nommage des classes et des méthodes.
+    \item \textbf{Aggregate Roots} : Chaque microservice gère une entité racine (ex: l'Ordre dans le service Commande) qui garantit l'intégrité de ses composants internes.
+\end{itemize}
+
+\section{II.4 Modélisation des Microservices et Communications}
+\label{sec:patterns}
+
+\subsection{II.4.1 API Gateway et Backend-for-Frontend (BFF)}
+L'API Gateway constitue le point d'entrée unique pour tous les clients du système Techcare. Elle agit comme une couche d'abstraction entre les clients (Web, Mobile) et la complexité interne des microservices.
+
+\begin{itemize}
+    \item \textbf{Façade et Routage intelligent} : La Gateway redirige les requêtes entrantes vers les microservices appropriés en fonction de l'URL, masquant ainsi la topologie réelle du réseau interne et les adresses spécifiques de chaque service.
+    \item \textbf{Agrégation de requêtes} : Pour optimiser les performances, elle peut fusionner les réponses de plusieurs services en un seul appel (ex: réunir les informations marketing de \textit{ProductService} et les niveaux de stock de \textit{InventoryService}), réduisant ainsi le "bavardage" réseau (\textit{chatter}) et la latence côté client.
+    \item \textbf{Gouvernance centralisée} : Elle assure des fonctions transverses (\textit{Cross-Cutting Concerns}) telles que la terminaison SSL, la gestion des CORS, le \textit{Rate Limiting} pour prévenir les abus, et la validation initiale des jetons JWT.
+    \item \textbf{Pattern BFF (Backend-for-Frontend)} : Cette approche nous permet de fournir des réponses adaptées aux besoins spécifiques de chaque interface utilisateur. Un client mobile recevra une version allégée des données pour économiser la bande passante, tandis qu'un portail administrateur pourra obtenir des informations plus denses.
+\end{itemize}
+
+
+\subsection{II.4.2 Chorégraphie : La force de l'asynchronisme}
+Pour la communication entre services, nous avons exclu l'orchestration centralisée (qui crée un couplage fort et un SPOF) au profit de la **Chorégraphie** via le broker de messages RabbitMQ :
+\begin{itemize}
+    \item \textbf{Découplage temporel} : Un service peut émettre un événement même si le destinataire est temporairement hors ligne. Le broker garantit la persistance des messages.
+    \item \textbf{Scalabilité horizontale} : Plusieurs instances d'un service peuvent consommer la même file d'attente pour traiter les tâches en parallèle.
+    \item \textbf{Réduction de la latence} : L'utilisateur reçoit une réponse immédiate ("Commande acceptée"), tandis que le traitement lourd (paiement, notification, mise à jour des stocks) s'effectue en arrière-plan.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{diagrams/class/class_architecture.png}
+    \caption{Diagramme de classe de l'architecture microservices}
+    \label{fig:class_architecture}
+\end{figure}
+
+L'analyse de cette architecture de classes révèle deux aspects fondamentaux de la conception :
+\begin{itemize}
+    \item \textbf{Organisation Domain-Driven (DDD)} : Contrairement au monolithe, les entités sont regroupées par contextes délimités (Catalog, Inventory, Order), garantissant un faible couplage et permettant à chaque domaine de posséder sa propre logique métier indépendante.
+    \item \textbf{Flexibilité et Évolutivité} : La structure met en évidence le rôle de l'API Gateway et la séparation des services, ce qui permet au système d'évoluer organiquement et de faciliter l'adoption de nouvelles technologies par service sans impacter l'ensemble du système.
+\end{itemize}
+
+
+\section{II.5 Architecture de Persistance et Base de Données}
+\label{sec:persistance}
+
+Le choix de la \textbf{Persistance Polyglotte} répond au besoin de performance :
+\begin{itemize}
+    \item \textbf{PostgreSQL (ACID)} : Indispensable pour l'Inventory Manager afin d'éviter le "Double Spending" de médicaments.
+    \item \textbf{MongoDB (BASE)} : Idéal pour le Product Manager afin de stocker des métadonnées hétérogènes (composition, posologie, photos).
+\end{itemize}
+
+
+\subsection{II.5.1 Justification des choix technologiques}
+
+Le tableau suivant synthétise les critères de sélection des bases de données :
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Critère} & \textbf{PostgreSQL} & \textbf{MongoDB} \\
+        \hline
+        Modèle de données & Relationnel (schéma fixe) & Documentaire (schéma flexible) \\
+        \hline
+        Consistance & ACID stricte & Consistance éventuelle \\
+        \hline
+        Cas d'usage Techcare & Stocks, Utilisateurs & Catalogue produits \\
+        \hline
+        Performance & Excellent pour transactions & Excellent pour lectures massives \\
+        \hline
+    \end{tabular}
+    \caption{Comparaison des systèmes de persistance retenus}
+    \label{tab:db_comparison}
+\end{table}
+
+\subsubsection{II.5.1.1 Justification du choix de PostgreSQL}
+
+PostgreSQL a été retenu pour les services nécessitant une \textbf{intégrité transactionnelle stricte}. Voici les raisons détaillées de ce choix :
+
+\begin{enumerate}[label=\alph*)]
+    \item \textbf{Garanties ACID indispensables} : Pour le service \textbf{Inventory Manager}, la gestion des stocks de médicaments ne tolère aucune incohérence. Les propriétés ACID de PostgreSQL garantissent :
+    \begin{itemize}
+        \item \textbf{Atomicité} : Une opération de décrémentation de stock est soit totalement effectuée, soit totalement annulée.
+        \item \textbf{Consistance} : Les contraintes de vérification (ex: \texttt{quantity >= 0}) sont appliquées.
+        \item \textbf{Isolation} : Les verrous empêchent les réservations doubles simultanées.
+        \item \textbf{Durabilité} : Les modifications sont persistées même en cas de panne.
+    \end{itemize}
+
+    \item \textbf{Support des contraintes relationnelles} : Le service \textbf{User Manager} exploite les relations entre tables. PostgreSQL impose l'intégrité référentielle, évitant les incohérences de données orphelines.
+
+    \item \textbf{Performance des jointures complexes} : Les requêtes agrégées (ex: historique de commandes détaillé) bénéficient de l'optimiseur de PostgreSQL, très performant pour les jointures massives.
+
+    \item \textbf{Typage strict et sécurité} : L'utilisation de Drizzle ORM avec PostgreSQL offre une sécurité type-safe dès la compilation, réduisant drastiquement les bugs.
+\end{enumerate}
+
+\subsubsection{II.5.1.2 Justification du choix de MongoDB}
+
+MongoDB a été sélectionné pour le service \textbf{Product Manager} en raison de la nature hétérogène des produits pharmaceutiques.
+
+\begin{enumerate}[label=\alph*)]
+    \item \textbf{Flexibilité du schéma documentaire} : Les produits médicaux ont des caractéristiques variables (sirops, comprimés, dispositifs médicaux). MongoDB permet de stocker ces variations dans une même collection sans migration de schéma complexe.
+
+    \item \textbf{Performance des lectures à grande échelle} : Le catalogue étant majoritairement consulté en lecture, MongoDB excelle grâce à son indexation avancée et son cache mémoire intégré.
+
+    \item \textbf{Support natif des données imbriquées} : Un produit contient des tableaux d'images ou de contre-indications. MongoDB stocke ces données nativement, évitant les jointures SQL coûteuses.
+
+    \item \textbf{Évolutivité sans migration} : L'ajout de nouveaux types de produits ne nécessite aucune modification de la structure de la base de données existante.
+\end{enumerate}
+
+\textbf{Conclusion sur la persistance (Trade-offs) :}
+Bien que la persistance polyglotte offre une flexibilité maximale, elle impose une complexité opérationnelle accrue. L'équipe de développement doit maîtriser deux langages de requêtage différents et la gestion des sauvegardes (\textit{backups}) devient plus hétérogène, nécessitant des stratégies distinctes pour le relationnel et le documentaire.
+
+\subsubsection{II.5.1.3 Justification des technologies applicatives et services tiers}
+
+Le choix des outils de développement et des services externes a été guidé par des impératifs d'architecture distribuée et de sécurité de l'information.
+
+\begin{enumerate}[label=\alph*)]
+    \item \textbf{NestJS pour l'architecture modulaire} : Choisi pour son injection de dépendances et son support natif des microservices. Il impose une rigueur indispensable à la maintenabilité du système.
+
+    \item \textbf{Stockage Objet (AWS S3) pour la scalabilité} : Centralisation des médias pour garantir des services \textit{stateless}, facilitant ainsi la montée en charge horizontale.
+
+    \item \textbf{Délégation de paiement (Stripe)} : Assure la sécurité financière et la conformité PCI-DSS en évitant le stockage de données sensibles en local.
+\end{enumerate}
+
+\textbf{Limites et contraintes identifiées :}
+L'adoption de ces solutions modernes n'est pas sans contreparties. L'utilisation de NestJS impose une courbe d'apprentissage initiale plus raide pour les développeurs habitués à des structures moins rigides. Par ailleurs, la dépendance à des services tiers comme AWS S3 ou Stripe introduit un risque de \textit{Vendor Lock-in} (dépendance vis-à-vis d'un fournisseur) et soumet le système à la disponibilité réseau de ces prestataires externes.
+
+\subsection{II.5.2 Gestion des transactions distribuées : Pattern Saga}
+
+Dans une architecture microservices, l'absence de transaction globale (ACID) inter-services pose un défi majeur. Le pattern \textbf{Saga}, introduit par Hector Garcia-Molina et Kenneth Salem en 1987, apporte une solution élégante à ce problème.
+
+\subsubsection{Définition formelle}
+Une Saga est une séquence de transactions locales $T_1, T_2, ..., T_n$ où chaque transaction $T_i$ possède une transaction compensatoire $C_i$. Si une transaction $T_k$ échoue, le système exécute les compensations $C_{k-1}, C_{k-2}, ..., C_1$ dans l'ordre inverse pour annuler les effets des transactions déjà validées.
+
+\subsubsection{Les deux approches de Saga}
+
+\textbf{1. Orchestration (Centralisée)}
+Un coordinateur central (Orchestrator) pilote l'exécution des transactions.
+\begin{itemize}
+    \item \textbf{Avantages} : Visibilité complète du flux, facilité de debugging
+    \item \textbf{Inconvénients} : Point de défaillance unique (SPOF)
+\end{itemize}
+
+\textbf{2. Chorégraphie (Décentralisée)} - \textit{Choix retenu pour Techcare}
+Chaque service écoute des événements et déclenche ses propres actions.
+\begin{itemize}
+    \item \textbf{Avantages} : Pas de SPOF, meilleure scalabilité
+    \item \textbf{Inconvénients} : Complexité accrue du monitoring
+\end{itemize}
+
+\subsubsection{Exemple concret : Commande de médicament}
+
+Considérons le scénario où un client commande un médicament sur Techcare :
+
+\textbf{Étapes de la Saga (Happy Path) :}
+\begin{enumerate}
+    \item \textbf{ProductService} : Vérifie la disponibilité du produit → Émet \texttt{ProductValidated}
+    \item \textbf{InventoryService} : Réserve le stock → Émet \texttt{StockReserved}
+    \item \textbf{PaymentService} : Traite le paiement → Émet \texttt{PaymentCompleted}
+    \item \textbf{NotificationService} : Envoie confirmation → Émet \texttt{OrderConfirmed}
+\end{enumerate}
+
+\textbf{Scénario de compensation (Failure Path) :}
+Si le \texttt{PaymentService} échoue à l'étape 3, les compensations suivantes sont déclenchées :
+\begin{itemize}
+    \item $C_2$ : \texttt{InventoryService} libère la réservation de stock
+    \item $C_1$ : \texttt{ProductService} marque le produit comme disponible
+    \item Notification d'échec envoyée au client
+\end{itemize}
+
+\textbf{Implémentation via RabbitMQ :}
+Chaque service publie des événements dans des exchanges dédiés. Les autres services écoutent les événements qui les concernent via des queues. Cette architecture événementielle garantit la résilience : si un service est temporairement indisponible, les messages restent dans la queue jusqu'à son retour en ligne.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Événement} & \textbf{Émetteur} & \textbf{Écouteur} \\
+        \hline
+        ProductValidated & ProductService & InventoryService \\
+        \hline
+        StockReserved & InventoryService & PaymentService \\
+        \hline
+        PaymentFailed & PaymentService & InventoryService \\
+        \hline
+        StockReleased & InventoryService & NotificationService \\
+        \hline
+    \end{tabular}
+    \caption{Flux d'événements dans la Saga de commande}
+    \label{tab:saga_events}
+\end{table}
+
+Ce mécanisme de chorégraphie distribué est illustré techniquement par le diagramme de séquence présenté en section II.7.1 (page \pageref{fig:sequence_saga}).
+
+\section{II.6 Modélisation de la Sécurité : Zero Trust Architecture}
+\label{sec:security_master}
+
+Dans notre conception, nous n'accordons aucune confiance implicite au réseau interne.
+
+\subsection{II.6.1 Architecture de sécurité en couches}
+\begin{enumerate}
+    \item \textbf{Authentification Stateless} : Utilisation de JWT signés par algorithme asymétrique (RS256).
+    \item \textbf{Propagation d'identité} : Le jeton est transmis de service en service, permettant un audit complet de chaque action.
+    \item \textbf{Chiffrement End-to-End et en transit} : 
+    \begin{itemize}
+        \item \textbf{Transactions financières} : Cryptage de bout en bout entre le client et Stripe (les données bancaires ne transitent jamais sur nos serveurs).
+        \item \textbf{Données sensibles} : Utilisation de TLS 1.3 pour toutes les communications avec AWS S3 et entre l'API Gateway et les clients.
+        \item \textbf{Sécurisation au repos} : Hachage des mots de passe via l'algorithme Bcrypt dans le User Service.
+    \end{itemize}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{diagrams/sequence/sequence_auth.png}
+    \caption{Diagramme de séquence de l'authentification utilisateur}
+    \label{fig:sequence_auth}
+\end{figure}
+
+Ce flux d'authentification met en exergue deux piliers de notre stratégie de sécurité :
+\begin{itemize}
+    \item \textbf{Authentification Stateless avec JWT} : Le diagramme détaille l'utilisation de jetons signés cryptographiquement (RS256) transmis au client, ce qui élimine le besoin de sessions persistantes sur le serveur et facilite la scalabilité horizontale.
+    \item \textbf{Validation Décentralisée} : Cette approche délègue la vérification de l'identité à chaque microservice de manière autonome, supprimant les goulots d'étranglement centraux et renforçant la résilience globale lors de la navigation sur la plateforme.
+\end{itemize}
+
+
+\subsection{II.6.2 Gestion des rôles et permissions}
+
+Le système implémente un contrôle d'accès basé sur les rôles (RBAC) :
+\begin{itemize}
+    \item \textbf{Admin} : Accès complet (CRUD produits, gestion stocks, utilisateurs)
+    \item \textbf{Pharmacien} : Lecture catalogue, gestion commandes, mise à jour stocks
+    \item \textbf{Client} : Consultation catalogue, passage de commandes
+\end{itemize}
+
+\section{II.7 Modélisation des Flux et Cas d'Usage}
+\label{sec:use_cases}
+
+Pour illustrer l'architecture, prenons le cas d'usage critique : "Passer une commande".
+
+\subsection{II.7.1 Processus métier de commande}
+
+Le flux se déroule ainsi :
+\begin{enumerate}
+    \item Le client envoie une requête HTTP POST à l'API Gateway
+    \item La Gateway vérifie le JWT et route vers le Product Manager via RabbitMQ
+    \item Le Product Manager valide la disponibilité
+    \item Un événement "ProductReserved" est publié
+    \item L'Inventory Manager écoute cet événement et décrémente le stock
+    \item Une notification est envoyée au client via Socket.io
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagrams/activity/activity_order.png}
+    \caption{Diagramme d'activité du processus de commande}
+    \label{fig:activity_order}
+\end{figure}
+
+Ce processus métier peut être analysé selon deux axes principaux :
+\begin{itemize}
+    \item \textbf{Logique Métier et Décisions} : Ce flux retrace le cheminement critique d'une commande, soulignant les points de décision comme la validation des stocks ou le succès du paiement, et les bifurcations en cas d'erreur.
+    \item \textbf{Optimisation de l'Expérience} : La visualisation de ces étapes a permis d'identifier les zones de contact utilisateur, facilitant l'intégration de notifications en temps réel pour informer le client de l'état d'avancement de son traitement.
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{diagrams/sequence/sequence_saga.png}
+    \caption{Diagramme de séquence du pattern Saga avec compensation}
+    \label{fig:sequence_saga}
+\end{figure}
+
+Le pattern Saga ainsi modélisé apporte des garanties essentielles à l'architecture distribuée :
+\begin{itemize}
+    \item \textbf{Chorégraphie Asynchrone} : L'implémentation repose sur le broker de messages RabbitMQ pour coordonner les services sans point de défaillance unique (SPOF), chaque microservice réagissant intelligemment aux événements métiers.
+    \item \textbf{Transactions Compensatoires} : Le diagramme montre comment le système assure l'intégrité des données à travers des services séparés en exécutant des actions de "rollback" (ex: libération de stock) en cas d'échec d'une étape transactionnelle ultérieure.
+\end{itemize}
+
+
+\section*{Conclusion partielle}
+En somme, ce deuxième chapitre a permis d'étalhir une conception robuste et cohérente de l'architecture cible. En nous appuyant sur les principes du Domain-Driven Design et du pattern Saga, nous avons modélisé un système capable de garantir la résilience et la scalabilité nécessaires à Techcare. Cette réflexion théorique et cette modélisation UML constituent le plan directeur indispensable pour la phase de réalisation technique, détaillée dans le chapitre suivant.
+
+ 

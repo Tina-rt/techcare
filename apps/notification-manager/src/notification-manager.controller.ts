@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { NotificationManagerService } from './notification-manager.service';
-import { MessagePattern } from '@nestjs/microservices';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Controller()
 export class NotificationManagerController {
@@ -9,13 +10,13 @@ export class NotificationManagerController {
   ) {}
 
   @MessagePattern('send_notification')
-  async handleSendNotification(data: any) {
-    console.log(
-      '[NOTIFICATION_MANAGER] Received send_notification message with data:',
-      data,
-    );
-    // this.notificationManagerService.sendRealTimeNotification(data);
-    // const notif = data as { type: string; message: string; recipientId: string };
-    return 'OK';
+  async handleSendNotification(@Payload() data: CreateNotificationDto) {
+    console.log('[NOTIFICATION_MANAGER] Creating notification:', data);
+    return this.notificationManagerService.sendNotification(data);
+  }
+
+  @MessagePattern('get_user_notifications')
+  async handleGetUserNotifications(@Payload() userId: number) {
+    return this.notificationManagerService.getAllForUser(userId);
   }
 }

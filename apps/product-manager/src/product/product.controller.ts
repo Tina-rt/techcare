@@ -1,54 +1,66 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './dtos/create-product.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import multer from 'multer';
+import { CreateProductDto, ProductFiltersDto } from '@app/shared';
+import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
-  getAllProducts() {
-    return this.productService.findAll({}, true);
+  @MessagePattern('find_all_products')
+  getAllProducts(@Payload() filters: ProductFiltersDto) {
+    return this.productService.findAll(filters, true);
+  }
+
+  @MessagePattern('search_products')
+  searchProducts(
+    @Payload()
+    payload: ProductFiltersDto & { keyword: string },
+  ) {
+    const { keyword, ...filters } = payload;
+    return this.productService.searchProducts(keyword, filters);
   }
 
   @Get(':id')
-  getProductById(@Param('id') id: string) {
+  @MessagePattern('find_product_by_id')
+  getProductById(@Payload() id: string) {
     return this.productService.findById(id);
   }
 
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
-  createProduct(
-    @Body() creerProductDto: CreateProductDto,
-    @UploadedFile() image: Express.Multer.File,
-  ) {
-    console.log('image', image);
-    // return { data: 'ok' };
-    return this.productService.createProduct(creerProductDto, image);
+  @MessagePattern('create_product')
+  createProduct(@Payload() creerProductDto: CreateProductDto) {
+    // L'image est déjà uploadée par la Gateway (File Manager).
+    // Le payload contient l'URL finale dans creerProductDto.image
+    console.log('[Product manager service] Creating product:', creerProductDto);
+    return this.productService.createProduct(creerProductDto);
   }
 
   @Put(':id')
-  updateProduct(
-    @Param('id') id: string,
-    @Body() updateProductDto: CreateProductDto,
-  ) {
-    return this.productService.updateById(id, updateProductDto);
+  @MessagePattern('update_product')
+  updateProduct(@Payload() payload: { id: string; data: CreateProductDto }) {
+    // In microservices without a dedicated payload class,
+    // nested objects like 'data' might not be transformed automatically.
+    // We rely on the global transform pipe, but sometimes we need to be explicit.
+    return this.productService.updateById(payload.id, payload.data);
   }
 
   @Delete(':id')
-  deleteProduct(@Param('id') id: string) {
+  @MessagePattern('delete_product')
+  deleteProduct(@Payload() id: string) {
     return this.productService.deleteById(id);
+  }
+
+  @EventPattern('order_created')
+  handleOrderCreated(
+    @Payload()
+    data: {
+      orderId: string;
+      items: { productId: string; quantity: number }[];
+      userId: string;
+    },
+  ) {
+    return this.productService.validateOrderProducts(data);
   }
 }

@@ -1,0 +1,32 @@
+@startuml activity_inventory
+!theme plain
+skinparam conditionStyle diamond
+
+title Diagramme d'activité : Gestion des Stocks (Pharmacien)
+
+start
+:Pharmacien accède au tableau de bord;
+:Sélectionner "Gestion des stocks";
+:Liste des produits avec niveaux critiques;
+
+if (Action à effectuer) then (Mise à jour manuelle)
+  :Sélectionner un produit;
+  :Saisir la nouvelle quantité;
+  :Enregistrer les modifications;
+  :Mise à jour de PostgreSQL via Inventory Service;
+else (Réception de commande fournisseur)
+  :Scanner le code-barres / Rechercher produit;
+  :Ajouter la quantité reçue;
+  :Valider l'entrée en stock;
+  :Inventory Service met à jour le stock;
+endif
+
+if (Quantité > Seuil d'alerte ?) then (non)
+  :Déclencher alerte de stock bas;
+  :Envoyer notification au Pharmacien/Admin;
+else (oui)
+endif
+
+:Afficher confirmation de succès;
+stop
+@enduml

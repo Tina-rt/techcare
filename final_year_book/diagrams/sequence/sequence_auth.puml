@@ -1,0 +1,41 @@
+@startuml sequence_auth
+!theme plain
+autonumber
+
+actor "Utilisateur (Client/Pharmacien)" as User
+participant "Frontend (Nuxt)" as UI
+participant "API Gateway" as Gateway
+participant "User Manager Service" as Auth
+database "PostgreSQL" as DB
+
+title Diagramme de séquence : Authentification
+
+User -> UI : Saisit Identifiants (Email, Password)
+UI -> Gateway : POST /auth/login
+activate Gateway
+
+Gateway -> Auth : Request: login_user(email, password)
+activate Auth
+
+Auth -> DB : Find user by email
+activate DB
+DB --> Auth : User Record (Hashed Password)
+deactivate DB
+
+Auth -> Auth : Comparer les mots de passe (bcrypt)
+
+alt Identifiants valides
+    Auth -> Auth : Générer JWT Access Token
+    Auth --> Gateway : Response: { user, accessToken }
+    Gateway --> UI : 200 OK + JWT
+    UI -> UI : Stocker JWT dans localStore/Vuex
+    UI --> User : Redirection vers Dashboard
+else Identifiants invalides
+    Auth --> Gateway : Error: Unauthorized
+    deactivate Auth
+    Gateway --> UI : 401 Unauthorized
+    UI --> User : Message: Email ou mot de passe incorrect
+end
+deactivate Gateway
+
+@enduml
