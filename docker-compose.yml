@@ -28,7 +28,7 @@ services:
       - techcare_network
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: techcare_postgres
     ports:
       - '5432:5432'
@@ -38,6 +38,26 @@ services:
       POSTGRES_DB: techcare
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d techcare"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - techcare_network
+
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: techcare_db_migrate
+    command: npm run db:migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
     networks:
       - techcare_network
 
@@ -64,8 +84,14 @@ services:
         APP_NAME: user
     container_name: techcare_user
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
     networks:
       - techcare_network
 
@@ -90,8 +116,14 @@ services:
         APP_NAME: inventory-manager
     container_name: techcare_inventory
     depends_on:
-      - rabbitmq
-      - postgres
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
     networks:
       - techcare_network
 
@@ -127,7 +159,12 @@ services:
         APP_NAME: notification-manager
     container_name: techcare_notification
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_started
+      db-migrate:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://user:password@techcare_postgres:5432/techcare
     networks:
       - techcare_network
 
