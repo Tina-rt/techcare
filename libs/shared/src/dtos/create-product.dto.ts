@@ -25,13 +25,17 @@ export class CreateProductDto {
   })
   description: string;
 
+  @Transform(({ value }: { value: unknown }): unknown =>
+    value !== undefined ? Number(value) : value,
+  )
   @IsNumber()
-  @Type(() => Number)
   price: number;
 
   @IsOptional()
+  @Transform(({ value }: { value: unknown }): unknown =>
+    value !== undefined ? Number(value) : value,
+  )
   @IsNumber()
-  @Type(() => Number)
   quantity?: number;
 
   @IsString()
@@ -62,15 +66,22 @@ export class CreateProductDto {
   @IsString()
   characteristic: string;
 
+  @Transform(({ value }: { value: unknown }): unknown =>
+    value !== undefined ? Number(value) : value,
+  )
   @IsNumber()
-  @Type(() => Number)
   reduction: number;
 
+  @Transform(({ value }: { value: unknown }): unknown =>
+    value !== undefined ? Number(value) : value,
+  )
   @IsNumber()
-  @Type(() => Number)
   tva: number;
 
+  @Transform(
+    ({ value }: { value: unknown }): boolean =>
+      value === 'true' || value === true,
+  )
   @IsBoolean()
-  @Type(() => Boolean)
   active: boolean;
 }

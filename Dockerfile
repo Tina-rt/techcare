@@ -21,7 +21,7 @@ ARG APP_NAME
 RUN npm run build ${APP_NAME}
 
 # --- STAGE 2: Runtime ---
-FROM node:22-alpine
+FROM node:24.13-alpine
 
 WORKDIR /app
 
