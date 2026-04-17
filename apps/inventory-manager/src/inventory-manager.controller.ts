@@ -26,6 +26,12 @@ export class InventoryManagerController {
     return this.inventoryManagerService.getAllInventory();
   }
 
+  @EventPattern('product_created')
+  handleProductCreated(@Payload() data: { productId: string; quantity: number }) {
+    console.log('[Inventory Manager] Initializing stock for product:', data.productId);
+    return this.inventoryManagerService.updateStock(data.productId, data.quantity);
+  }
+
   @EventPattern('product_validated')
   handleProductValidated(@Payload() data: any) {
     return this.inventoryManagerService.reserveStock(data);

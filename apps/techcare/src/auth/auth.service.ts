@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom, defaultIfEmpty } from 'rxjs';
+import { sendAndCatch } from '@app/shared';
 import * as bcrypt from 'bcrypt';
 import type { User, NewUser } from '@app/database';
 
@@ -25,10 +25,11 @@ export class AuthService {
     phone?: string,
   ) {
     // Check if user exists via User microservice
-    const existing = await lastValueFrom(
-      this.userClient
-        .send<User>('find_user_by_email', email)
-        .pipe(defaultIfEmpty(null)),
+    const existing = await sendAndCatch<User | null>(
+      this.userClient,
+      'find_user_by_email',
+      email,
+      null,
     );
     if (existing) {
       throw new ConflictException('Email already in use');
@@ -44,10 +45,21 @@ export class AuthService {
     };
 
     // Create user via User microservice
-    const [created] = await lastValueFrom(
-      this.userClient.send<User[]>('create_user', newUser),
+    const [created] = await sendAndCatch<User[]>(
+      this.userClient,
+      'create_user',
+      newUser,
     );
     return { id: created.id, email: created.email };
+  }
+
+  async getProfile(userId: number) {
+    return sendAndCatch<Omit<User, 'password'> | null>(
+      this.userClient,
+      'get_user_profile',
+      userId,
+      null,
+    );
   }
 
   async updateProfile(
@@ -63,20 +75,22 @@ export class AuthService {
       };
     },
   ) {
-    return lastValueFrom(
-      this.userClient
-        .send('update_profile', { id: userId, data })
-        .pipe(defaultIfEmpty(null)),
+    return sendAndCatch<any>(
+      this.userClient,
+      'update_profile',
+      { id: userId, data },
+      null,
     );
   }
 
   async signin(email: string, password: string) {
     console.log('Signin...');
     // Find user by email via User microservice
-    const found = await lastValueFrom(
-      this.userClient
-        .send<User>('find_user_by_email', email)
-        .pipe(defaultIfEmpty(null)),
+    const found = await sendAndCatch<User | null>(
+      this.userClient,
+      'find_user_by_email',
+      email,
+      null,
     );
     if (!found) {
       throw new UnauthorizedException('Invalid credentials');

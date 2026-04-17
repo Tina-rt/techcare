@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
-import { FileUploadResponse } from '@app/shared';
+import { FileUploadResponse, sendAndCatch } from '@app/shared';
 
 @Injectable()
 export class FileService {
@@ -22,8 +21,6 @@ export class FileService {
       size: file.size,
       folder: folder || 'uploads',
     };
-    return lastValueFrom(
-      this.fileClient.send<FileUploadResponse>('upload_file', payload),
-    );
+    return sendAndCatch<FileUploadResponse>(this.fileClient, 'upload_file', payload);
   }
 }

@@ -29,9 +29,10 @@ export class CreateProductDto {
   @Type(() => Number)
   price: number;
 
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  quantity: number;
+  quantity?: number;
 
   @IsString()
   brand: string;

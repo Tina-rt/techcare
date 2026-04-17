@@ -15,14 +15,14 @@ export class AuthMeController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Request() req: { user: { sub: number; email: string } }): any {
-    return req.user;
+  getProfile(@Request() req: { user: { userId: number; email: string } }): any {
+    return this.authService.getProfile(req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateProfile(
-    @Request() req: { user: { sub: number; email: string } },
+    @Request() req: { user: { userId: number; email: string } },
     @Body()
     body: {
       name?: string;
@@ -42,6 +42,6 @@ export class AuthMeController {
         ? { ...restAddress, city: town }
         : undefined,
     };
-    return this.authService.updateProfile(req.user.sub, updateData);
+    return this.authService.updateProfile(req.user.userId, updateData);
   }
 }

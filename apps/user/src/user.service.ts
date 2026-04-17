@@ -1,6 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '@app/database';
-import { user as userTable, address as addressTable, User, NewUser } from '@app/database';
+import {
+  user as userTable,
+  address as addressTable,
+  User,
+  NewUser,
+} from '@app/database';
 import * as schema from '@app/database/schema';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq } from 'drizzle-orm';
@@ -17,11 +22,15 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    const users = await this.db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, email));
-    return users[0];
+    try {
+      const users = await this.db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.email, email));
+      return users[0];
+    } catch {
+      return undefined;
+    }
   }
 
   async findById(id: number): Promise<User | undefined> {
@@ -30,6 +39,19 @@ export class UserService {
       .from(userTable)
       .where(eq(userTable.id, id));
     return users[0];
+  }
+
+  async getUserProfile(id: number) {
+    const userProfile = await this.db.query.user.findFirst({
+      where: eq(userTable.id, id),
+      with: {
+        address: true,
+      },
+    });
+    if (!userProfile) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = userProfile;
+    return result;
   }
 
   async create(data: NewUser) {

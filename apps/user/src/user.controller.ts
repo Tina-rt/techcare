@@ -22,6 +22,11 @@ export class UserController {
     return this.userService.findById(id);
   }
 
+  @MessagePattern('get_user_profile')
+  getProfile(@Payload() id: number) {
+    return this.userService.getUserProfile(id);
+  }
+
   @MessagePattern('create_user')
   create(@Payload() data: NewUser) {
     return this.userService.create(data);

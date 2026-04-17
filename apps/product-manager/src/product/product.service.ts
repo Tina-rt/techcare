@@ -136,6 +136,15 @@ export class ProductService {
     });
     const newProduct = await createdProduct.save();
     console.log('[Create product]', newProduct);
+
+    // Initialiser le stock via l'Inventory Service
+    if (produitData.quantity !== undefined) {
+      this.inventoryClient.emit('product_created', {
+        productId: newProduct._id.toString(),
+        quantity: produitData.quantity,
+      });
+    }
+
     return newProduct.toObject({ virtuals: true }) as unknown as Product;
   }
 

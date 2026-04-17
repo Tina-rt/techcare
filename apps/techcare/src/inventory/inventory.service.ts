@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { sendAndCatch } from '@app/shared';
 
 @Injectable()
 export class InventoryService {
@@ -10,20 +10,14 @@ export class InventoryService {
   ) {}
 
   async getStock(productId: string): Promise<unknown> {
-    return lastValueFrom<unknown>(
-      this.inventoryClient.send('get_stock', productId),
-    );
+    return sendAndCatch<unknown>(this.inventoryClient, 'get_stock', productId);
   }
 
   async updateStock(productId: string, quantity: number): Promise<unknown> {
-    return lastValueFrom<unknown>(
-      this.inventoryClient.send('update_stock', { productId, quantity }),
-    );
+    return sendAndCatch<unknown>(this.inventoryClient, 'update_stock', { productId, quantity });
   }
 
   async findAll(): Promise<unknown> {
-    return lastValueFrom<unknown>(
-      this.inventoryClient.send('find_all_inventory', {}),
-    );
+    return sendAndCatch<unknown>(this.inventoryClient, 'find_all_inventory', {});
   }
 }

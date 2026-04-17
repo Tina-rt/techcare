@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { SendNotificationDto } from './dto/sendNotificationDto';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { sendAndCatch } from '@app/shared';
 
 @Injectable()
 export class NotificationService {
@@ -11,17 +11,14 @@ export class NotificationService {
   ) {}
 
   async sendNotification(notif: SendNotificationDto): Promise<unknown> {
-    return lastValueFrom<unknown>(
-      this.notificationManagerService.send('send_notification', notif),
-    );
+    return sendAndCatch<unknown>(this.notificationManagerService, 'send_notification', notif);
   }
 
   async getAllNotifications(userId?: number): Promise<unknown> {
-    return lastValueFrom<unknown>(
-      this.notificationManagerService.send(
-        'get_user_notifications',
-        userId ?? 0,
-      ),
+    return sendAndCatch<unknown>(
+      this.notificationManagerService,
+      'get_user_notifications',
+      userId ?? 0,
     );
   }
 }
