@@ -217,6 +217,20 @@ export class InventoryManagerService {
     return results as StockMovement[];
   }
 
+  async deleteInventory(productId: string): Promise<void> {
+    this.logger.log(`Deleting inventory record for product: ${productId}`);
+    try {
+      await this.db
+        .delete(inventoryTable)
+        .where(eq(inventoryTable.productId, productId));
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete inventory for product ${productId}:`,
+        error,
+      );
+    }
+  }
+
   private async logMovement(data: Partial<StockMovement>): Promise<void> {
     try {
       await this.db.insert(movementsTable).values({

@@ -67,4 +67,10 @@ export class InventoryManagerController {
   findMovements(@Payload() productId?: string) {
     return this.inventoryManagerService.getMovements(productId);
   }
+
+  @EventPattern('product_deleted')
+  handleProductDeleted(@Payload() productId: string) {
+    console.log('[Inventory Manager] Deleting inventory for product:', productId);
+    return this.inventoryManagerService.deleteInventory(productId);
+  }
 }

@@ -169,6 +169,11 @@ export class ProductService {
       .findByIdAndDelete(id)
       .lean<Product>()
       .exec();
+
+    if (deleted) {
+      console.log('Emitting product_deleted event for:', id);
+      this.inventoryClient.emit('product_deleted', id);
+    }
     return deleted;
   }
 
