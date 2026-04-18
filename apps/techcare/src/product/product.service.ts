@@ -1,10 +1,24 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+  HttpException,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { Product, CreateProductDto, ProductFiltersDto, sendAndCatch } from '@app/shared';
+import {
+  Product,
+  CreateProductDto,
+  ProductFiltersDto,
+  sendAndCatch,
+  Inventory,
+} from '@app/shared';
 import { FileService } from '../file/file.service';
 
 @Injectable()
 export class ProductService {
+  private readonly logger = new Logger(ProductService.name);
+
   constructor(
     @Inject('PRODUCT_MANAGER_SERVICE')
     private readonly productClient: ClientProxy,
@@ -43,7 +57,11 @@ export class ProductService {
       'find_product_by_id',
       id,
     );
-    const stock = await sendAndCatch<any>(this.inventoryClient, 'get_stock', id);
+    const stock = await sendAndCatch<Inventory>(
+      this.inventoryClient,
+      'get_stock',
+      id,
+    );
     return {
       ...product,
       quantity: stock?.quantity ?? 0,
@@ -54,22 +72,44 @@ export class ProductService {
     data: CreateProductDto,
     image?: Express.Multer.File,
   ): Promise<Product> {
-    console.log('Creating products', data);
-    console.log('Images', image);
-    let imageUrl = '';
-    if (image) {
-      const uploadResult = await this.fileService.uploadFile(image, 'products');
-      imageUrl = uploadResult.url;
-    }
+    try {
+      this.logger.log(`Creating product: ${data.name}`);
+      let imageUrl = '';
 
-    return sendAndCatch<Product>(this.productClient, 'create_product', {
-      ...data,
-      image: imageUrl,
-    });
+      if (image) {
+        this.logger.log(`Uploading image for product: ${data.name}`);
+        const uploadResult = await this.fileService.uploadFile(
+          image,
+          'products',
+        );
+        imageUrl = uploadResult.url;
+      }
+
+      this.logger.log(`Sending create_product request to microservice`);
+      return await sendAndCatch<Product>(this.productClient, 'create_product', {
+        ...data,
+        image: imageUrl,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to create product: ${error.message}`,
+        error.stack,
+      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        error.message ||
+          'An unexpected error occurred while creating the product',
+      );
+    }
   }
 
   async update(id: string, data: CreateProductDto): Promise<Product> {
-    return sendAndCatch<Product>(this.productClient, 'update_product', { id, data });
+    return sendAndCatch<Product>(this.productClient, 'update_product', {
+      id,
+      data,
+    });
   }
 
   async delete(id: string): Promise<Product> {

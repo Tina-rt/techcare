@@ -21,6 +21,10 @@ export class FileService {
       size: file.size,
       folder: folder || 'uploads',
     };
-    return sendAndCatch<FileUploadResponse>(this.fileClient, 'upload_file', payload);
+    return sendAndCatch<FileUploadResponse>(
+      this.fileClient,
+      'upload_file',
+      payload,
+    );
   }
 }

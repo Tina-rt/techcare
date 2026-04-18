@@ -27,8 +27,15 @@ export async function sendAndCatch<TResult = any, TInput = any>(
           );
         }
         if (error?.status && error?.message) {
+          let statusResult = error.status;
+          if (typeof statusResult === 'string') {
+            const parsed = parseInt(statusResult, 10);
+            statusResult = isNaN(parsed) ? 500 : parsed;
+          } else if (typeof statusResult !== 'number') {
+            statusResult = 500;
+          }
           return throwError(
-            () => new HttpException(error.message, error.status),
+            () => new HttpException(error.message, statusResult as number),
           );
         }
         return throwError(

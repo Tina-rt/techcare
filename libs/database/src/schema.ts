@@ -14,6 +14,11 @@ import {
   type Inventory,
   type NewInventory,
 } from './schemas/inventory.schema';
+import {
+  stockMovements,
+  type StockMovement,
+  type NewStockMovement,
+} from './schemas/stock-movement.schema';
 
 export const userRelations = relations(user, ({ one }) => ({
   address: one(address, {
@@ -43,4 +48,5 @@ export type NewNotification = typeof notification.$inferInsert;
 
 export { user, type NewUser, type User };
 export { inventory, type Inventory, type NewInventory };
+export { stockMovements, type StockMovement, type NewStockMovement };
 export { address };

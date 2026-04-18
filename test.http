@@ -1,22 +1,41 @@
 
-GET http://localhost:4000/products
+# GET http://localhost:4000/products
 
-# POST http://localhost:3000/category
-# Content-Type: application/json
+POST  http://localhost:4001/auth/signin
+Content-Type: application/json
+{
+    "email": "tina@mail.com",
+    "password": "tinatina"
+}
 
-# {
-#   "name": "New Category",
-#   "description": "Category Description"
-# }
 
-# PATCH http://localhost:3000/category/68f78cc2b5ca57b4c9d9e6f7
-# Content-Type: application/json
+### Inventory Endpoints
 
-# {
-#   "name": "Updated Category Name",
-#   "description": "Updated Description"
-# }
+# @name getAllInventory
+GET http://localhost:4000/inventory
 
-# DELETE http://localhost:3000/category/68f78c04204dde2839a07769
+### Get stock for a specific product
+# @name getStock
+GET http://localhost:4000/inventory/{{productId}}
+
+### Update stock (Requires Auth)
+# @name updateStock
+POST http://localhost:4000/inventory/update
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "productId": "{{productId}}",
+    "quantity": 50
+}
+
+### Audit Trail Endpoints
+
+# @name getAllMovements
+GET http://localhost:4000/inventory/movements
+
+### Get movements for a specific product
+# @name getProductMovements
+GET http://localhost:4000/inventory/{{productId}}/movements
 
 

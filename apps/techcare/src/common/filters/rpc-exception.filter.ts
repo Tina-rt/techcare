@@ -74,13 +74,23 @@ export class RpcExceptionFilter implements ExceptionFilter {
       }
     }
 
+    // Final safety check to ensure status is a valid HTTP status code
+    let finalStatus =
+      typeof status === 'number' && Number.isInteger(status)
+        ? status
+        : parseInt(status as any, 10);
+
+    if (isNaN(finalStatus) || finalStatus < 100 || finalStatus > 599) {
+      finalStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
     console.warn(
-      `[RpcExceptionFilter] Catching error: ${status} - ${message}`,
+      `[RpcExceptionFilter] Catching error: ${finalStatus} - ${message}`,
       exception,
     );
 
-    response.status(status).json({
-      statusCode: status,
+    response.status(finalStatus).json({
+      statusCode: finalStatus,
       timestamp: new Date().toISOString(),
       path: request.url,
       message: message,

@@ -20,6 +20,7 @@ export default () => ({
     allowedMimeTypes: process.env.ALLOWED_MIME_TYPES?.split(',') || [
       'image/jpeg',
       'image/png',
+      'image/webp',
       'image/gif',
       'application/pdf',
       'text/plain',

@@ -118,9 +118,9 @@ export class ProductService {
     return result;
   }
 
-  async createProduct(produitData: CreateProductDto): Promise<Product> {
+  async createProduct(productData: CreateProductDto): Promise<Product> {
     const prfound = await this.produitModel
-      .findOne({ serialNumber: produitData.serialNumber })
+      .findOne({ serialNumber: productData.serialNumber })
       .exec();
     if (prfound) {
       throw new RpcException({
@@ -131,19 +131,24 @@ export class ProductService {
 
     // L'URL de l'image est déjà fournie dans le payload par la Gateway
     const createdProduct = new this.produitModel({
-      ...produitData,
-      image: produitData.image ?? '',
+      ...productData,
+      image: productData.image ?? '',
     });
     const newProduct = await createdProduct.save();
     console.log('[Create product]', newProduct);
 
     // Initialiser le stock via l'Inventory Service
-    if (produitData.quantity !== undefined) {
-      this.inventoryClient.emit('product_created', {
-        productId: newProduct._id.toString(),
-        quantity: produitData.quantity,
-      });
+    if (productData.quantity === undefined || productData.quantity === null) {
+      productData.quantity = 0;
     }
+    console.log('sending product_created event', {
+      productId: newProduct._id.toString(),
+      quantity: productData.quantity,
+    });
+    this.inventoryClient.emit('product_created', {
+      productId: newProduct._id.toString(),
+      quantity: productData.quantity,
+    });
 
     return newProduct.toObject({ virtuals: true }) as unknown as Product;
   }

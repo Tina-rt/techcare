@@ -4,6 +4,7 @@ export const inventory = pgTable('inventory', {
   id: serial('id').primaryKey(),
   productId: text('product_id').notNull(), // Reference to MongoDB Product ID
   quantity: integer('quantity').notNull().default(0),
+  reservedQuantity: integer('reserved_quantity').notNull().default(0),
   location: text('location'),
   lastUpdated: timestamp('last_updated').defaultNow().notNull(),
 });

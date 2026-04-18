@@ -56,7 +56,12 @@ export class FileManagerService {
       };
     } catch (error) {
       console.error('Error uploading file:', error);
-      throw new BadRequestException(`File upload failed`);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        error.message || 'File upload failed',
+      );
     }
   }
 

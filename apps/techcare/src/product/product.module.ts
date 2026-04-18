@@ -17,7 +17,9 @@ import { FileModule } from '../file/file.module';
         name: 'PRODUCT_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+          urls: [
+            process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
+          ],
           queue: 'product_manager_queue',
           queueOptions: {
             durable: false,
@@ -28,7 +30,9 @@ import { FileModule } from '../file/file.module';
         name: 'INVENTORY_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+          urls: [
+            process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
+          ],
           queue: 'inventory_manager_queue',
           queueOptions: {
             durable: false,
