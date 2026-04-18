@@ -14,6 +14,7 @@ import {
   StockReleaseDto,
   StockMovementType,
   StockMovement,
+  OrderItem,
 } from '@app/shared';
 
 @Injectable()
@@ -46,7 +47,7 @@ export class InventoryManagerService {
     const existing = await this.getStock(productId);
     const prevQuantity = existing?.quantity ?? 0;
 
-    let updatedInventory: any[];
+    let updatedInventory: Inventory[];
 
     if (existing) {
       updatedInventory = await this.db
@@ -143,7 +144,7 @@ export class InventoryManagerService {
   /**
    * Finalize Stock (Order Complete): Decrease BOTH physical quantity and reservedQuantity.
    */
-  async finalizeStock(data: { orderId: string; items: any[] }): Promise<void> {
+  async finalizeStock(data: { orderId: string; items: OrderItem[] }): Promise<void> {
     const { orderId, items } = data;
     this.logger.log(`Finalizing stock for order: ${orderId}`);
 
@@ -205,7 +206,7 @@ export class InventoryManagerService {
     }
   }
 
-  async getMovements(productId?: any): Promise<StockMovement[]> {
+  async getMovements(productId?: string): Promise<StockMovement[]> {
     if (productId && typeof productId === 'string') {
       const results = await this.db
         .select()

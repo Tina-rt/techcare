@@ -10,6 +10,7 @@ import { CreatePaymentIntentDto } from './dtos/create-payment-intent.dto';
 import { ConfirmPaymentDto } from './dtos/confirm-payment.dto';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { StockReservedPayload } from '@app/shared';
 
 @Injectable()
 export class PaymentService {
@@ -212,11 +213,7 @@ export class PaymentService {
     }
   }
 
-  async processSagaPayment(data: {
-    orderId: string;
-    items: any[];
-    userId: string;
-  }): Promise<void> {
+  async processSagaPayment(data: StockReservedPayload): Promise<void> {
     const { orderId } = data;
     try {
       // Pour une vraie Saga, on pourrait récupérer le montant de la commande

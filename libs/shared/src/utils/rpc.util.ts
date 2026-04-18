@@ -7,9 +7,12 @@ import {
 import { lastValueFrom, TimeoutError, throwError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 
-export async function sendAndCatch<TResult = any, TInput = any>(
+/** Valid RPC message pattern: a plain string or an object like { cmd: 'action' } */
+export type RpcPattern = string | Record<string, string>;
+
+export async function sendAndCatch<TResult = unknown, TInput = unknown>(
   client: ClientProxy,
-  pattern: any,
+  pattern: RpcPattern,
   data: TInput,
   defaultValue?: TResult,
 ): Promise<TResult> {
@@ -47,6 +50,6 @@ export async function sendAndCatch<TResult = any, TInput = any>(
         );
       }),
     ),
-    { defaultValue: (defaultValue !== undefined ? defaultValue : null) as any },
+    { defaultValue: (defaultValue !== undefined ? defaultValue : null) as TResult },
   );
 }

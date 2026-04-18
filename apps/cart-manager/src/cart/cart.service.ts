@@ -1,127 +1,155 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CartDocument, Cart as CartSchema } from './schemas/cart.schema';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, sql } from 'drizzle-orm';
+import * as schema from '@app/database/schema';
+import { carts } from '@app/database/schema';
+import { DATABASE_CONNECTION } from '@app/database';
 import {
   Cart,
   AddToCartDto,
   UpdateCartItemDto,
   RemoveFromCartDto,
+  CartItem,
 } from '@app/shared';
 
 @Injectable()
 export class CartService {
   constructor(
-    @InjectModel(CartSchema.name) private cartModel: Model<CartDocument>,
+    @Inject(DATABASE_CONNECTION)
+    private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
   async addToCart(addToCartDto: AddToCartDto): Promise<Cart> {
     const { userId, productId, quantity, price, name, image } = addToCartDto;
 
-    let cart = await this.cartModel.findOne({ userId });
+    // Upsert: create cart if not existing
+    await this.db
+      .insert(carts)
+      .values({
+        userId,
+        items: [],
+        totalAmount: 0,
+        totalItems: 0,
+      })
+      .onConflictDoNothing();
 
-    if (!cart) {
-      cart = new this.cartModel({ userId, items: [] });
-    }
+    const [existing] = await this.db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId));
 
-    const itemIndex = cart.items.findIndex(
-      (item) => item.productId === productId,
-    );
+    const items = [...(existing.items as CartItem[])];
+    const itemIndex = items.findIndex((i) => i.productId === productId);
 
     if (itemIndex > -1) {
-      // Item exists, update quantity
-      cart.items[itemIndex].quantity += quantity;
+      items[itemIndex].quantity += quantity;
     } else {
-      // New item, add to cart
-      cart.items.push({ productId, quantity, price, name, image });
+      items.push({ productId, quantity, price, name, image });
     }
 
-    // Recalculate totals
-    cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
-    );
-    cart.totalItems = cart.items.reduce(
-      (total, item) => total + item.quantity,
-      0,
-    );
+    const totalAmount = items.reduce((t, i) => t + i.price * i.quantity, 0);
+    const totalItems = items.reduce((t, i) => t + i.quantity, 0);
 
-    return cart.save();
+    const [updated] = await this.db
+      .update(carts)
+      .set({ items, totalAmount, totalItems, updatedAt: new Date() })
+      .where(eq(carts.userId, userId))
+      .returning();
+
+    return this.toCart(updated);
   }
 
   async getCart(userId: string): Promise<Cart> {
-    const cart = await this.cartModel.findOne({ userId });
+    const [cart] = await this.db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId));
+
     if (!cart) {
-      // Return empty cart
-      return new this.cartModel({ userId, items: [] });
+      return { userId, items: [], totalAmount: 0, totalItems: 0 };
     }
-    return cart;
+    return this.toCart(cart);
   }
 
   async updateCartItem(updateCartItemDto: UpdateCartItemDto): Promise<Cart> {
     const { userId, productId, quantity } = updateCartItemDto;
+    const [cart] = await this.db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId));
 
-    const cart = await this.cartModel.findOne({ userId });
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    if (!cart) throw new NotFoundException('Cart not found');
 
-    const itemIndex = cart.items.findIndex(
-      (item) => item.productId === productId,
+    const items = (cart.items as CartItem[]).map((i) =>
+      i.productId === productId ? { ...i, quantity } : i,
     );
 
-    if (itemIndex === -1) {
-      throw new NotFoundException('Item not found in cart');
-    }
-
-    cart.items[itemIndex].quantity = quantity;
-
-    // Recalculate totals
-    cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
+    const found = (cart.items as CartItem[]).findIndex(
+      (i) => i.productId === productId,
     );
-    cart.totalItems = cart.items.reduce(
-      (total, item) => total + item.quantity,
-      0,
-    );
+    if (found === -1) throw new NotFoundException('Item not found in cart');
 
-    return cart.save();
+    const totalAmount = items.reduce((t, i) => t + i.price * i.quantity, 0);
+    const totalItems = items.reduce((t, i) => t + i.quantity, 0);
+
+    const [updated] = await this.db
+      .update(carts)
+      .set({ items, totalAmount, totalItems, updatedAt: new Date() })
+      .where(eq(carts.userId, userId))
+      .returning();
+
+    return this.toCart(updated);
   }
 
   async removeFromCart(removeFromCartDto: RemoveFromCartDto): Promise<Cart> {
     const { userId, productId } = removeFromCartDto;
+    const [cart] = await this.db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId));
 
-    const cart = await this.cartModel.findOne({ userId });
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    if (!cart) throw new NotFoundException('Cart not found');
 
-    cart.items = cart.items.filter((item) => item.productId !== productId);
-
-    // Recalculate totals
-    cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
+    const items = (cart.items as CartItem[]).filter(
+      (i) => i.productId !== productId,
     );
-    cart.totalItems = cart.items.reduce(
-      (total, item) => total + item.quantity,
-      0,
-    );
+    const totalAmount = items.reduce((t, i) => t + i.price * i.quantity, 0);
+    const totalItems = items.reduce((t, i) => t + i.quantity, 0);
 
-    return cart.save();
+    const [updated] = await this.db
+      .update(carts)
+      .set({ items, totalAmount, totalItems, updatedAt: new Date() })
+      .where(eq(carts.userId, userId))
+      .returning();
+
+    return this.toCart(updated);
   }
 
   async clearCart(userId: string): Promise<Cart> {
-    const cart = await this.cartModel.findOne({ userId });
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    const [existing] = await this.db
+      .select()
+      .from(carts)
+      .where(eq(carts.userId, userId));
 
-    cart.items = [];
-    cart.totalAmount = 0;
-    cart.totalItems = 0;
+    if (!existing) throw new NotFoundException('Cart not found');
 
-    return cart.save();
+    const [updated] = await this.db
+      .update(carts)
+      .set({ items: [], totalAmount: 0, totalItems: 0, updatedAt: new Date() })
+      .where(eq(carts.userId, userId))
+      .returning();
+
+    return this.toCart(updated);
+  }
+
+  private toCart(row: typeof carts.$inferSelect): Cart {
+    return {
+      userId: row.userId,
+      items: (row.items as CartItem[]) ?? [],
+      totalAmount: row.totalAmount,
+      totalItems: row.totalItems,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
   }
 }

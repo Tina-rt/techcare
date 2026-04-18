@@ -10,6 +10,8 @@ import { FileModule } from './file/file.module';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -27,6 +29,8 @@ import { ConfigModule } from '@nestjs/config';
     CartModule,
     OrderModule,
     PaymentModule,
+    DashboardModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

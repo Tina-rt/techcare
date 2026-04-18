@@ -6,6 +6,7 @@ import {
 import { AuthGuard as NestAuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
+import { AuthenticatedUser } from '@app/shared';
 
 @Injectable()
 export class JwtAuthGuard extends NestAuthGuard('jwt') {
@@ -20,7 +21,11 @@ export class JwtAuthGuard extends NestAuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = any>(err: any, user: TUser, info: any): TUser {
+  handleRequest<TUser extends AuthenticatedUser = AuthenticatedUser>(
+    err: Error | null,
+    user: TUser | false,
+    _info: unknown,
+  ): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }

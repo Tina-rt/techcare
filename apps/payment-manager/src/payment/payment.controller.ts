@@ -5,6 +5,7 @@ import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PaymentService } from './payment.service';
 import { CreatePaymentIntentDto } from './dtos/create-payment-intent.dto';
 import { ConfirmPaymentDto } from './dtos/confirm-payment.dto';
+import { StockReservedPayload } from '@app/shared';
 
 @Controller('payment')
 export class PaymentController {
@@ -51,7 +52,7 @@ export class PaymentController {
   }
 
   @EventPattern('stock_reserved')
-  handleStockReserved(@Payload() data: any) {
+  handleStockReserved(@Payload() data: StockReservedPayload) {
     return this.paymentService.processSagaPayment(data);
   }
 }

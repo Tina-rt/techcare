@@ -1,8 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { OrderService } from './order.service';
-import { CreateOrderDto, Order } from '@app/shared';
-import { UpdateOrderStatusDto } from './dtos/update-order-status.dto';
+import {
+  CreateOrderDto,
+  Order,
+  UpdateOrderStatusDto,
+  DashboardStats,
+} from '@app/shared';
 
 @Controller()
 export class OrderController {
@@ -86,5 +90,10 @@ export class OrderController {
       data,
       'Product validation failed',
     );
+  }
+
+  @MessagePattern('get_dashboard_stats')
+  async getDashboardStats(): Promise<DashboardStats> {
+    return this.orderService.getDashboardStats();
   }
 }

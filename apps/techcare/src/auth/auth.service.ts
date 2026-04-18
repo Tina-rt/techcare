@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
-import { sendAndCatch } from '@app/shared';
+import { sendAndCatch, UpdateProfileData } from '@app/shared';
 import * as bcrypt from 'bcrypt';
 import type { User, NewUser } from '@app/database';
 
@@ -64,18 +64,9 @@ export class AuthService {
 
   async updateProfile(
     userId: number,
-    data: {
-      name?: string;
-      firstname?: string;
-      phone?: string;
-      address?: {
-        street?: string;
-        city?: string;
-        country?: string;
-      };
-    },
+    data: UpdateProfileData,
   ) {
-    return sendAndCatch<any>(
+    return sendAndCatch<User>(
       this.userClient,
       'update_profile',
       { id: userId, data },

@@ -63,4 +63,9 @@ export class ProductController {
   ) {
     return this.productService.validateOrderProducts(data);
   }
+
+  @MessagePattern('count_products')
+  countProducts() {
+    return this.productService.countProducts();
+  }
 }

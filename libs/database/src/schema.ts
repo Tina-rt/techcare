@@ -19,6 +19,8 @@ import {
   type StockMovement,
   type NewStockMovement,
 } from './schemas/stock-movement.schema';
+import { carts, type CartRow, type NewCartRow } from './schemas/cart.schema';
+import { orders, type OrderRow, type NewOrderRow } from './schemas/order.schema';
 
 export const userRelations = relations(user, ({ one }) => ({
   address: one(address, {
@@ -50,3 +52,5 @@ export { user, type NewUser, type User };
 export { inventory, type Inventory, type NewInventory };
 export { stockMovements, type StockMovement, type NewStockMovement };
 export { address };
+export { carts, type CartRow, type NewCartRow };
+export { orders, type OrderRow, type NewOrderRow };

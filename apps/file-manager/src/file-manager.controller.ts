@@ -31,10 +31,15 @@ export class FileManagerController {
     });
 
     // Construct a pseudo-file object for the service
-    const rawBuffer = (data.buffer as any)?.data || data.buffer;
-    const buffer = Buffer.isBuffer(rawBuffer)
-      ? rawBuffer
-      : Buffer.from(rawBuffer);
+    // RabbitMQ serializes Buffer objects as { type: 'Buffer', data: number[] }
+    const rawBuffer: Buffer | { type?: string; data?: number[] } = data.buffer;
+    const resolvedBuffer =
+      Buffer.isBuffer(rawBuffer)
+        ? rawBuffer
+        : Buffer.from(
+            (rawBuffer as { data: number[] }).data ?? [],
+          );
+    const buffer = resolvedBuffer;
 
     const file = {
       buffer: buffer,

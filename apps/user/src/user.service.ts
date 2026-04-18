@@ -17,7 +17,13 @@ export class UserService {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  async findAll(): Promise<User[]> {
+  async findAll(role?: 'USER' | 'ADMIN'): Promise<User[]> {
+    if (role) {
+      return this.db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.role, role));
+    }
     return this.db.select().from(userTable);
   }
 
@@ -64,6 +70,10 @@ export class UserService {
       .set(data)
       .where(eq(userTable.id, id))
       .returning();
+  }
+
+  async delete(id: number) {
+    return this.db.delete(userTable).where(eq(userTable.id, id)).returning();
   }
 
   async updateProfile(

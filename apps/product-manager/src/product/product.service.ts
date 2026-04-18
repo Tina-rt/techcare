@@ -177,6 +177,13 @@ export class ProductService {
     return deleted;
   }
 
+  async countProducts(): Promise<number> {
+    console.log('Counting products');
+    const count = await this.produitModel.countDocuments().exec();
+    console.log('Count:', count);
+    return count;
+  }
+
   async validateOrderProducts(data: {
     orderId: string;
     items: { productId: string; quantity: number }[];

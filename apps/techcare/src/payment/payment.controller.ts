@@ -2,6 +2,17 @@ import { Controller, Post, Get, Body, Param, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
+interface CreatePaymentIntentBody {
+  orderId: string;
+  amount: number;
+  currency: string;
+}
+
+interface ConfirmPaymentBody {
+  paymentIntentId: string;
+  paymentMethodId: string;
+}
+
 @Controller('payment')
 export class PaymentController {
   constructor(
@@ -10,14 +21,14 @@ export class PaymentController {
   ) {}
 
   @Post('create-intent')
-  async createPaymentIntent(@Body() body: any): Promise<unknown> {
+  async createPaymentIntent(@Body() body: CreatePaymentIntentBody): Promise<unknown> {
     return firstValueFrom<unknown>(
       this.paymentClient.send({ cmd: 'create_payment_intent' }, body),
     );
   }
 
   @Post('confirm')
-  async confirmPayment(@Body() body: any): Promise<unknown> {
+  async confirmPayment(@Body() body: ConfirmPaymentBody): Promise<unknown> {
     return firstValueFrom<unknown>(
       this.paymentClient.send({ cmd: 'confirm_payment' }, body),
     );
@@ -39,9 +50,7 @@ export class PaymentController {
     return firstValueFrom<unknown>(
       this.paymentClient.send(
         { cmd: 'get_payment_intent' },
-        {
-          paymentIntentId,
-        },
+        { paymentIntentId },
       ),
     );
   }

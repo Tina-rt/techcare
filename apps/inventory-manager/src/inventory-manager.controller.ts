@@ -6,6 +6,7 @@ import {
   UpdateStockDto,
   StockReservationDto,
   StockReleaseDto,
+  FinalizeStockPayload,
 } from '@app/shared';
 
 @Controller()
@@ -54,7 +55,7 @@ export class InventoryManagerController {
   }
 
   @EventPattern('payment_completed')
-  handlePaymentCompleted(@Payload() data: { orderId: string; items: any[] }) {
+  handlePaymentCompleted(@Payload() data: FinalizeStockPayload) {
     return this.inventoryManagerService.finalizeStock(data);
   }
 

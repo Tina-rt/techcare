@@ -38,10 +38,10 @@ export class InventoryService {
         ...stock,
         product,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(
         `Failed to fetch product info for ${productId}:`,
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
       return {
         ...stock,
@@ -88,7 +88,7 @@ export class InventoryService {
       );
 
       const productMap = new Map(
-        products.map((p) => [(p as any)._id?.toString(), p]),
+        products.map((p) => [(p as Product & { _id?: string })._id?.toString(), p]),
       );
 
       return inventory.map((item) => ({

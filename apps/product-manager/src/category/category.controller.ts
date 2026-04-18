@@ -40,7 +40,7 @@ export class CategorysController {
     @Body() @Payload() payload: { id: string; data: CreateCategoryDto },
   ) {
     const categoryId = id || payload.id;
-    const data = payload.data || (payload as any);
+    const data: CreateCategoryDto = payload.data ?? (payload as unknown as CreateCategoryDto);
     return this.categoryService.updateById(categoryId, data);
   }
 

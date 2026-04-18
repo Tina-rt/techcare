@@ -78,7 +78,7 @@ export class RpcExceptionFilter implements ExceptionFilter {
     let finalStatus =
       typeof status === 'number' && Number.isInteger(status)
         ? status
-        : parseInt(status as any, 10);
+        : parseInt(String(status), 10);
 
     if (isNaN(finalStatus) || finalStatus < 100 || finalStatus > 599) {
       finalStatus = HttpStatus.INTERNAL_SERVER_ERROR;

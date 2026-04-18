@@ -8,8 +8,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @MessagePattern('find_all_users')
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Payload() role?: 'USER' | 'ADMIN') {
+    return this.userService.findAll(role);
   }
 
   @MessagePattern('find_user_by_email')
@@ -35,6 +35,11 @@ export class UserController {
   @MessagePattern('update_user')
   update(@Payload() payload: { id: number; data: Partial<NewUser> }) {
     return this.userService.update(payload.id, payload.data);
+  }
+
+  @MessagePattern('delete_user')
+  delete(@Payload() id: number) {
+    return this.userService.delete(id);
   }
 
   @MessagePattern('update_profile')

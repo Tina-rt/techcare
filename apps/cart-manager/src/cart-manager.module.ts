@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { CartManagerController } from './cart-manager.controller';
 import { CartManagerService } from './cart-manager.service';
 import { CartModule } from './cart/cart.module';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -28,12 +27,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         },
       },
     ]),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
-    }),
     CartModule,
   ],
   controllers: [CartManagerController],

@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
-import { Order, OrderSchema } from './schemas/order.schema';
+import { DatabaseModule } from '@app/database';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    DatabaseModule,
     ClientsModule.register([
       {
         name: 'CART_MANAGER_SERVICE',
@@ -15,9 +14,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'cart_manager_queue',
-          queueOptions: {
-            durable: false,
-          },
+          queueOptions: { durable: false },
         },
       },
       {
@@ -26,9 +23,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'notification_manager_queue',
-          queueOptions: {
-            durable: false,
-          },
+          queueOptions: { durable: false },
         },
       },
       {
@@ -37,9 +32,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
         options: {
           urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
           queue: 'product_manager_queue',
-          queueOptions: {
-            durable: false,
-          },
+          queueOptions: { durable: false },
         },
       },
     ]),

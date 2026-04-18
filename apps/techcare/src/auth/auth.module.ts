@@ -18,8 +18,10 @@ import { JwtStrategy } from './jwt.strategy';
         name: 'USER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
-          queue: 'user_service_queue',
+          urls: [
+            process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
+          ],
+          queue: 'user_manager_queue',
           queueOptions: {
             durable: false,
           },

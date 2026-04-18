@@ -5,6 +5,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { NotificationPayload } from '@app/shared';
 
 @WebSocketGateway()
 export class NotificationGateway {
@@ -26,7 +27,7 @@ export class NotificationGateway {
   }
 
   // Method to emit notifications from service/controller
-  sendNotification(notification: any, channel: string) {
+  sendNotification(notification: NotificationPayload, channel: string): void {
     console.log('Sending notification to clients:', notification);
     this.server.emit(channel, JSON.stringify(notification));
   }

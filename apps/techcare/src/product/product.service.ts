@@ -120,7 +120,7 @@ export class ProductService {
     if (!products.length) return [];
 
     try {
-      const inventory = await sendAndCatch<any[]>(
+      const inventory = await sendAndCatch<Inventory[]>(
         this.inventoryClient,
         'find_all_inventory',
         {},
@@ -132,7 +132,7 @@ export class ProductService {
 
       return products.map((product) => ({
         ...product,
-        quantity: stockMap.get((product as any)._id?.toString()) ?? 0,
+        quantity: stockMap.get((product as Product & { _id?: string })._id?.toString()) ?? 0,
       }));
     } catch (error) {
       console.error('Failed to aggregate stock:', error);

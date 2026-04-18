@@ -1,23 +1,28 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { OrderDocument, Order as OrderSchema } from './schemas/order.schema';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { RpcException, ClientProxy } from '@nestjs/microservices';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, desc } from 'drizzle-orm';
+import * as schema from '@app/database/schema';
+import { orders } from '@app/database/schema';
+import { DATABASE_CONNECTION } from '@app/database';
 import {
   Order,
   Cart,
   CreateOrderDto,
   OrderStatus,
   PaymentStatus,
+  OrderItem,
+  ShippingAddress,
+  DashboardStats,
 } from '@app/shared';
 import { UpdateOrderStatusDto } from './dtos/update-order-status.dto';
-import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectModel(OrderSchema.name) private orderModel: Model<OrderDocument>,
+    @Inject(DATABASE_CONNECTION)
+    private readonly db: NodePgDatabase<typeof schema>,
     @Inject('CART_MANAGER_SERVICE')
     private readonly cartClient: ClientProxy,
     @Inject('NOTIFICATION_MANAGER_SERVICE')
@@ -38,61 +43,67 @@ export class OrderService {
       throw new RpcException('Cart is empty');
     }
 
-    // Create order from cart
-    const order = new this.orderModel({
-      userId,
-      items: cart.items,
-      totalAmount: cart.totalAmount,
-      totalItems: cart.totalItems,
-      shippingAddress,
-      notes,
-      status: OrderStatus.PENDING,
-      paymentStatus: PaymentStatus.PENDING,
-    });
-
-    const savedOrder = await order.save();
+    const [savedOrder] = await this.db
+      .insert(orders)
+      .values({
+        userId,
+        items: cart.items,
+        totalAmount: cart.totalAmount,
+        totalItems: cart.totalItems,
+        shippingAddress,
+        notes,
+        status: OrderStatus.PENDING,
+        paymentStatus: PaymentStatus.PENDING,
+      })
+      .returning();
 
     // Clear cart after order creation
     await firstValueFrom(
       this.cartClient.send({ cmd: 'clear_cart' }, { userId }),
     );
 
-    // Initialiser la Saga : Valider les produits via ProductService
+    // Initiate Saga: validate products via ProductService
     this.productClient.emit('order_created', {
-      orderId: savedOrder._id.toString(),
+      orderId: savedOrder.id.toString(),
       items: savedOrder.items,
       userId: savedOrder.userId,
     });
 
-    // Envoyer une notification de création de commande (en attente)
+    // Send pending order notification
     this.notificationClient.emit('order_created_pending', {
       userId,
-      orderId: savedOrder._id.toString(),
+      orderId: savedOrder.id.toString(),
       totalAmount: savedOrder.totalAmount,
     });
 
-    return savedOrder.toObject() as unknown as Order;
+    return this.toOrder(savedOrder);
   }
 
   async getOrderById(orderId: string): Promise<Order> {
-    const order = await this.orderModel.findById(orderId);
-    if (!order) {
-      throw new RpcException('Order not found');
-    }
-    return order.toObject() as unknown as Order;
+    const [order] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
+
+    if (!order) throw new RpcException('Order not found');
+    return this.toOrder(order);
   }
 
   async getUserOrders(userId: string): Promise<Order[]> {
-    const orders = await this.orderModel
-      .find({ userId })
-      .sort({ createdAt: -1 })
-      .exec();
-    return orders as unknown as Order[];
+    const rows = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.createdAt));
+    return rows.map(this.toOrder);
   }
 
   async getAllOrders(): Promise<Order[]> {
-    const orders = await this.orderModel.find().sort({ createdAt: -1 }).exec();
-    return orders as unknown as Order[];
+    const rows = await this.db
+      .select()
+      .from(orders)
+      .orderBy(desc(orders.createdAt));
+    return rows.map(this.toOrder);
   }
 
   async updateOrderStatus(
@@ -100,26 +111,30 @@ export class OrderService {
   ): Promise<Order> {
     const { orderId, status, trackingNumber } = updateOrderStatusDto;
 
-    const order = await this.orderModel.findById(orderId);
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
+    const [existing] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
 
-    order.status = status;
-    if (trackingNumber) {
-      order.trackingNumber = trackingNumber;
-    }
+    if (!existing) throw new NotFoundException('Order not found');
 
-    const updatedOrder = await order.save();
+    const [updated] = await this.db
+      .update(orders)
+      .set({
+        status,
+        ...(trackingNumber && { trackingNumber }),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, parseInt(orderId)))
+      .returning();
 
-    // Send notification
     this.notificationClient.emit('order_status_updated', {
-      userId: order.userId,
-      orderId: order._id.toString(),
+      userId: existing.userId,
+      orderId,
       status,
     });
 
-    return updatedOrder.toObject() as unknown as Order;
+    return this.toOrder(updated);
   }
 
   async updatePaymentStatus(
@@ -127,62 +142,78 @@ export class OrderService {
     paymentStatus: string,
     paymentIntentId?: string,
   ): Promise<Order> {
-    const order = await this.orderModel.findById(orderId);
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
+    const [existing] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
 
-    order.paymentStatus = paymentStatus as PaymentStatus;
-    if (paymentIntentId) {
-      order.paymentIntentId = paymentIntentId;
-    }
+    if (!existing) throw new NotFoundException('Order not found');
 
-    // If payment is completed, update order status to processing
-    if (paymentStatus === 'completed') {
-      order.status = OrderStatus.PROCESSING;
-    }
+    const [updated] = await this.db
+      .update(orders)
+      .set({
+        paymentStatus,
+        ...(paymentIntentId && { paymentIntentId }),
+        ...(paymentStatus === 'completed' && {
+          status: OrderStatus.PROCESSING,
+        }),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, parseInt(orderId)))
+      .returning();
 
-    const updatedOrder = await order.save();
-    return updatedOrder.toObject() as unknown as Order;
+    return this.toOrder(updated);
   }
 
   async cancelOrder(orderId: string): Promise<Order> {
-    const order = await this.orderModel.findById(orderId);
-    if (!order) {
-      throw new RpcException('Order not found');
-    }
+    const [existing] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
+
+    if (!existing) throw new RpcException('Order not found');
 
     if (
-      order.status === OrderStatus.SHIPPED ||
-      order.status === OrderStatus.DELIVERED
+      existing.status === OrderStatus.SHIPPED ||
+      existing.status === OrderStatus.DELIVERED
     ) {
       throw new RpcException('Cannot cancel shipped or delivered order');
     }
 
-    order.status = OrderStatus.CANCELLED;
-    const updatedOrder = await order.save();
+    const [updated] = await this.db
+      .update(orders)
+      .set({ status: OrderStatus.CANCELLED, updatedAt: new Date() })
+      .where(eq(orders.id, parseInt(orderId)))
+      .returning();
 
-    // Send notification
     this.notificationClient.emit('order_cancelled', {
-      userId: order.userId,
-      orderId: order._id.toString(),
+      userId: existing.userId,
+      orderId,
     });
 
-    return updatedOrder.toObject() as unknown as Order;
+    return this.toOrder(updated);
   }
 
   async finalizeOrder(data: { orderId: string }): Promise<void> {
     const { orderId } = data;
-    const order = await this.orderModel.findById(orderId);
-    if (order) {
-      order.status = OrderStatus.PROCESSING;
-      order.paymentStatus = PaymentStatus.COMPLETED;
-      await order.save();
+    const [existing] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
 
-      // Notification finale
+    if (existing) {
+      await this.db
+        .update(orders)
+        .set({
+          status: OrderStatus.PROCESSING,
+          paymentStatus: PaymentStatus.COMPLETED,
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.id, parseInt(orderId)));
+
       this.notificationClient.emit('order_confirmed', {
-        userId: order.userId,
-        orderId: order._id.toString(),
+        userId: existing.userId,
+        orderId,
       });
     }
   }
@@ -192,17 +223,120 @@ export class OrderService {
     reason: string,
   ): Promise<void> {
     const { orderId } = data;
-    const order = await this.orderModel.findById(orderId);
-    if (order) {
-      order.status = OrderStatus.CANCELLED;
-      await order.save();
+    const [existing] = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(orderId)));
 
-      // Notification d'échec
+    if (existing) {
+      await this.db
+        .update(orders)
+        .set({ status: OrderStatus.CANCELLED, updatedAt: new Date() })
+        .where(eq(orders.id, parseInt(orderId)));
+
       this.notificationClient.emit('order_failed', {
-        userId: order.userId,
-        orderId: order._id.toString(),
+        userId: existing.userId,
+        orderId,
         reason: data.reason || reason,
       });
     }
+  }
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const completedOrders = await this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.paymentStatus, PaymentStatus.COMPLETED));
+
+    const totalRevenue = completedOrders.reduce(
+      (acc, order) => acc + order.totalAmount,
+      0,
+    );
+    const totalProductsOrdered = completedOrders.reduce(
+      (acc, order) => acc + order.totalItems,
+      0,
+    );
+
+    // Monthly Sales Graph
+    const salesAmountGraph = {
+      labels: [
+        'Jan',
+        'Fév',
+        'Mar',
+        'Avr',
+        'Mai',
+        'Juin',
+        'Juil',
+        'Août',
+        'Sept',
+        'Oct',
+        'Nov',
+        'Déc',
+      ],
+      datasets: [
+        {
+          label: 'Ventes (Ar)',
+          data: new Array(12).fill(0),
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: 'rgb(59, 130, 246)',
+          tension: 0.4,
+        },
+      ],
+    };
+
+    // Product Distribution Graph
+    const productCounts: Record<string, number> = {};
+
+    completedOrders.forEach((order) => {
+      const month = new Date(order.createdAt).getMonth();
+      salesAmountGraph.datasets[0].data[month] += order.totalAmount;
+
+      (order.items as OrderItem[]).forEach((item) => {
+        productCounts[item.name] =
+          (productCounts[item.name] || 0) + item.quantity;
+      });
+    });
+
+    const orderedProductGraph = {
+      labels: Object.keys(productCounts).slice(0, 5),
+      datasets: [
+        {
+          data: Object.values(productCounts).slice(0, 5),
+          backgroundColor: [
+            '#3b82f6',
+            '#10b981',
+            '#f59e0b',
+            '#ef4444',
+            '#8b5cf6',
+          ],
+        },
+      ],
+    };
+
+    return {
+      totalRevenue,
+      totalProductsOrdered,
+      orders: completedOrders.slice(0, 10).map(this.toOrder),
+      salesAmountGraph,
+      orderedProductGraph,
+    };
+  }
+
+  private toOrder(row: typeof orders.$inferSelect): Order {
+    return {
+      _id: row.id.toString(),
+      userId: row.userId,
+      items: (row.items as OrderItem[]) ?? [],
+      totalAmount: row.totalAmount,
+      totalItems: row.totalItems,
+      status: row.status as OrderStatus,
+      paymentStatus: row.paymentStatus as PaymentStatus,
+      paymentIntentId: row.paymentIntentId ?? undefined,
+      shippingAddress: row.shippingAddress as ShippingAddress,
+      trackingNumber: row.trackingNumber ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
   }
 }
