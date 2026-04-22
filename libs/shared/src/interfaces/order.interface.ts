@@ -1,5 +1,8 @@
 import { OrderStatus, PaymentStatus } from '../enums';
 
+/** Fixed shipping fee in Euros */
+export const SHIPPING_FEE = 5.0;
+
 export interface OrderItem {
   productId: string;
   quantity: number;
@@ -20,10 +23,11 @@ export interface ShippingAddress {
 
 export interface Order {
   _id?: string;
-  userId: string;
+  userId: number;
   items: OrderItem[];
   totalAmount: number;
   totalItems: number;
+  shippingFee: number;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentIntentId?: string;

@@ -89,7 +89,7 @@ export class OrderService {
     return this.toOrder(order);
   }
 
-  async getUserOrders(userId: string): Promise<Order[]> {
+  async getUserOrders(userId: number): Promise<Order[]> {
     const rows = await this.db
       .select()
       .from(orders)
@@ -333,6 +333,7 @@ export class OrderService {
       paymentStatus: row.paymentStatus as PaymentStatus,
       paymentIntentId: row.paymentIntentId ?? undefined,
       shippingAddress: row.shippingAddress as ShippingAddress,
+      shippingFee: row.shippingFee,
       trackingNumber: row.trackingNumber ?? undefined,
       notes: row.notes ?? undefined,
       createdAt: row.createdAt,

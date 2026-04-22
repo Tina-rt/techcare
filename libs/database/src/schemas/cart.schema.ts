@@ -9,7 +9,7 @@ import {
 
 export const carts = pgTable('carts', {
   id: serial('id').primaryKey(),
-  userId: varchar('user_id', { length: 255 }).notNull().unique(), // one cart per user
+  userId: integer('user_id').notNull().unique(), // one cart per user
   items: jsonb('items').default([]).notNull(),
   totalAmount: integer('total_amount').default(0).notNull(),
   totalItems: integer('total_items').default(0).notNull(),

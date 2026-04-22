@@ -18,6 +18,8 @@ export class ProductService {
     private inventoryClient: ClientProxy,
     @Inject('ORDER_MANAGER_SERVICE')
     private orderClient: ClientProxy,
+    @Inject('FILE_MANAGER_SERVICE')
+    private fileClient: ClientProxy,
   ) {}
 
   async findAll(
@@ -173,8 +175,31 @@ export class ProductService {
     if (deleted) {
       console.log('Emitting product_deleted event for:', id);
       this.inventoryClient.emit('product_deleted', id);
+
+      if (deleted.image) {
+        const key = this.extractKeyFromUrl(deleted.image);
+        if (key) {
+          console.log('Requesting image deletion for key:', key);
+          this.fileClient.emit('delete_file', { key });
+        }
+      }
     }
     return deleted;
+  }
+
+  private extractKeyFromUrl(url: string): string | null {
+    try {
+      // Assuming URL format: https://domain.com/path/to/key
+      // We want path/to/key
+      const parsedUrl = new URL(url);
+      // Remove leading slash from pathname to get the S3 key
+      return parsedUrl.pathname.startsWith('/')
+        ? parsedUrl.pathname.substring(1)
+        : parsedUrl.pathname;
+    } catch (e) {
+      console.error('Failed to extract key from URL:', url, e);
+      return null;
+    }
   }
 
   async countProducts(): Promise<number> {

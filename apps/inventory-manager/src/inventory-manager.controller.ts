@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { InventoryManagerService } from './inventory-manager.service';
 import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
-import {
+import type {
   Inventory,
   UpdateStockDto,
   StockReservationDto,
@@ -36,9 +36,7 @@ export class InventoryManagerController {
   }
 
   @MessagePattern('product_created')
-  handleProductCreated(
-    @Payload() data: UpdateStockDto,
-  ): Promise<Inventory[]> {
+  handleProductCreated(@Payload() data: UpdateStockDto): Promise<Inventory[]> {
     console.log(
       '[Inventory Manager] Initializing stock for product:',
       data.productId,
@@ -71,7 +69,10 @@ export class InventoryManagerController {
 
   @EventPattern('product_deleted')
   handleProductDeleted(@Payload() productId: string) {
-    console.log('[Inventory Manager] Deleting inventory for product:', productId);
+    console.log(
+      '[Inventory Manager] Deleting inventory for product:',
+      productId,
+    );
     return this.inventoryManagerService.deleteInventory(productId);
   }
 }

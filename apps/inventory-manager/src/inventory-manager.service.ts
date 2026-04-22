@@ -75,7 +75,7 @@ export class InventoryManagerService {
       referenceId,
     });
 
-    return updatedInventory as Inventory[];
+    return updatedInventory;
   }
 
   async getAllInventory(): Promise<Inventory[]> {
@@ -144,7 +144,10 @@ export class InventoryManagerService {
   /**
    * Finalize Stock (Order Complete): Decrease BOTH physical quantity and reservedQuantity.
    */
-  async finalizeStock(data: { orderId: string; items: OrderItem[] }): Promise<void> {
+  async finalizeStock(data: {
+    orderId: string;
+    items: OrderItem[];
+  }): Promise<void> {
     const { orderId, items } = data;
     this.logger.log(`Finalizing stock for order: ${orderId}`);
 

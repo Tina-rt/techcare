@@ -24,7 +24,7 @@ export class OrderController {
 
   @MessagePattern({ cmd: 'get_user_orders' })
   async getUserOrders(@Payload() data: { userId: string }): Promise<Order[]> {
-    return this.orderService.getUserOrders(data.userId);
+    return this.orderService.getUserOrders(Number(data.userId));
   }
 
   @MessagePattern({ cmd: 'get_all_orders' })

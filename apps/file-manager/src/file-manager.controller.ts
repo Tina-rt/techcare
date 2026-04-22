@@ -83,4 +83,15 @@ export class FileManagerController {
       },
     );
   }
+
+  @MessagePattern('delete_file')
+  async handleDeleteFile(@Payload() data: { key?: string; url?: string }) {
+    console.log('Received delete_file message:', data);
+    if (data.key) {
+      return this.fileManagerService.deleteFile(data.key);
+    }
+    // If URL is provided instead of key, we'll let the caller handle extraction for now
+    // or we could implement extraction here if needed.
+    return { success: false, message: 'Key is required for deletion' };
+  }
 }

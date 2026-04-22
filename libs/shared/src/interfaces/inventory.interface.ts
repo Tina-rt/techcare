@@ -40,3 +40,7 @@ export interface StockMovement {
   reason?: string | null;
   createdAt?: Date | string;
 }
+
+export interface StockMovementWithProduct extends StockMovement {
+  product: Product | null;
+}

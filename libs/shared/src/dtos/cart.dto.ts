@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
 export class AddToCartDto {
   @IsNotEmpty()
-  @IsString()
-  userId: string;
+  @IsNumber()
+  userId: number;
 
   @IsNotEmpty()
   @IsString()
@@ -12,24 +12,12 @@ export class AddToCartDto {
   @IsNotEmpty()
   @IsNumber()
   quantity: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  price: number;
-
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  image?: string;
 }
 
 export class UpdateCartItemDto {
   @IsNotEmpty()
-  @IsString()
-  userId: string;
+  @IsNumber()
+  userId: number;
 
   @IsNotEmpty()
   @IsString()
@@ -42,8 +30,8 @@ export class UpdateCartItemDto {
 
 export class RemoveFromCartDto {
   @IsNotEmpty()
-  @IsString()
-  userId: string;
+  @IsNumber()
+  userId: number;
 
   @IsNotEmpty()
   @IsString()

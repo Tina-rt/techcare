@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AwsConfigService } from './config/aws.config';
 import { ConfigService } from '@nestjs/config';
@@ -59,9 +59,23 @@ export class FileManagerService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new BadRequestException(
-        error.message || 'File upload failed',
-      );
+      throw new BadRequestException(error.message || 'File upload failed');
+    }
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    try {
+      console.log('Deleting file with key:', key);
+      const command = new DeleteObjectCommand({
+        Bucket: this.awsConfig.getS3Bucket(),
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+      console.log('Successfully deleted file:', key);
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      // We don't throw here to avoid blocking product deletion if file deletion fails
     }
   }
 

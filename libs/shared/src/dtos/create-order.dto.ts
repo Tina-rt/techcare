@@ -3,6 +3,7 @@ import {
   IsString,
   IsOptional,
   ValidateNested,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -38,13 +39,17 @@ export class ShippingAddressDto {
 
 export class CreateOrderDto {
   @IsNotEmpty()
-  @IsString()
-  userId: string;
+  @IsNumber()
+  userId: number;
 
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => ShippingAddressDto)
   shippingAddress: ShippingAddressDto;
+
+  @IsOptional()
+  @IsNumber()
+  shippingFee?: number;
 
   @IsOptional()
   @IsString()

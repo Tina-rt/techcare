@@ -7,7 +7,7 @@ export interface CartItem {
 }
 
 export interface Cart {
-  userId: string;
+  userId: number;
   items: CartItem[];
   totalAmount: number;
   totalItems: number;

@@ -62,15 +62,12 @@ export class AuthService {
     );
   }
 
-  async updateProfile(
-    userId: number,
-    data: UpdateProfileData,
-  ) {
+  async updateProfile(userId: number, data: UpdateProfileData) {
     return sendAndCatch<User>(
       this.userClient,
       'update_profile',
       { id: userId, data },
-      null,
+      undefined,
     );
   }
 

@@ -105,11 +105,37 @@ export class ProductService {
     }
   }
 
-  async update(id: string, data: CreateProductDto): Promise<Product> {
-    return sendAndCatch<Product>(this.productClient, 'update_product', {
-      id,
-      data,
-    });
+  async update(
+    id: string,
+    data: CreateProductDto,
+    image?: Express.Multer.File,
+  ): Promise<Product> {
+    try {
+      if (image) {
+        this.logger.log(`Uploading new image for product update: ${id}`);
+        const uploadResult = await this.fileService.uploadFile(
+          image,
+          'products',
+        );
+        data.image = uploadResult.url;
+      }
+
+      return sendAndCatch<Product>(this.productClient, 'update_product', {
+        id,
+        data,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to update product: ${error.message}`,
+        error.stack,
+      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        error.message || 'An unexpected error occurred while updating the product',
+      );
+    }
   }
 
   async delete(id: string): Promise<Product> {

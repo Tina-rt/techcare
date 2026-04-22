@@ -1,15 +1,23 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as schema from '@app/database/schema';
 import { carts } from '@app/database/schema';
 import { DATABASE_CONNECTION } from '@app/database';
+import { ClientProxy } from '@nestjs/microservices';
 import {
   Cart,
   AddToCartDto,
   UpdateCartItemDto,
   RemoveFromCartDto,
   CartItem,
+  Product,
+  sendAndCatch,
 } from '@app/shared';
 
 @Injectable()
@@ -17,10 +25,29 @@ export class CartService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
+    @Inject('PRODUCT_MANAGER_SERVICE')
+    private readonly productClient: ClientProxy,
   ) {}
 
   async addToCart(addToCartDto: AddToCartDto): Promise<Cart> {
-    const { userId, productId, quantity, price, name, image } = addToCartDto;
+    const { userId, productId, quantity } = addToCartDto;
+
+    // Fetch product info to ensure it exists and get verified price/name
+    const product = await sendAndCatch<Product>(
+      this.productClient,
+      'find_product_by_id',
+      productId,
+    );
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (!product.active) {
+      throw new BadRequestException('Product is not currently available');
+    }
+
+    const { price, name, image } = product;
 
     // Upsert: create cart if not existing
     await this.db
@@ -43,6 +70,10 @@ export class CartService {
 
     if (itemIndex > -1) {
       items[itemIndex].quantity += quantity;
+      // Update price/name/image in case they changed since last add
+      items[itemIndex].price = price;
+      items[itemIndex].name = name;
+      items[itemIndex].image = image;
     } else {
       items.push({ productId, quantity, price, name, image });
     }
@@ -59,7 +90,7 @@ export class CartService {
     return this.toCart(updated);
   }
 
-  async getCart(userId: string): Promise<Cart> {
+  async getCart(userId: number): Promise<Cart> {
     const [cart] = await this.db
       .select()
       .from(carts)

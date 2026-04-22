@@ -1,15 +1,23 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Put,
   Body,
-  Param,
+  Controller,
+  Get,
   Inject,
+  Param,
+  Post,
+  Put,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { CreateOrderDto, Order, UpdateOrderStatusDto } from '@app/shared';
+import {
+  CreateOrderDto,
+  Order,
+  UpdateOrderStatusDto,
+  sendAndCatch,
+  convertToCsv,
+} from '@app/shared';
 
 @Controller('order')
 export class OrderController {
@@ -44,6 +52,28 @@ export class OrderController {
     return firstValueFrom<Order[]>(
       this.orderClient.send({ cmd: 'get_all_orders' }, {}),
     );
+  }
+
+  @Get('export')
+  async exportOrders(@Res() res: Response) {
+    const orders = await sendAndCatch<Order[]>(
+      this.orderClient,
+      { cmd: 'get_all_orders' },
+      {},
+    );
+
+    const csv = convertToCsv(orders, [
+      { field: 'id', header: 'ID' },
+      { field: 'userId', header: 'Client ID' },
+      { field: 'totalAmount', header: 'Montant Total' },
+      { field: 'status', header: 'Statut' },
+      { field: 'paymentStatus', header: 'Paiement' },
+      { field: 'createdAt', header: 'Date' },
+    ]);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`orders_${new Date().getTime()}.csv`);
+    return res.send(csv);
   }
 
   @Put('status')

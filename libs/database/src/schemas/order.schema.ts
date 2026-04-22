@@ -10,12 +10,15 @@ import {
 
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
-  userId: varchar('user_id', { length: 255 }).notNull(),
+  userId: integer('user_id').notNull(),
   items: jsonb('items').default([]).notNull(),
   totalAmount: integer('total_amount').notNull(),
   totalItems: integer('total_items').notNull(),
+  shippingFee: integer('shipping_fee').notNull().default(0),
   status: varchar('status', { length: 50 }).notNull().default('pending'),
-  paymentStatus: varchar('payment_status', { length: 50 }).notNull().default('pending'),
+  paymentStatus: varchar('payment_status', { length: 50 })
+    .notNull()
+    .default('pending'),
   paymentIntentId: varchar('payment_intent_id', { length: 255 }),
   shippingAddress: jsonb('shipping_address').notNull(),
   trackingNumber: varchar('tracking_number', { length: 255 }),

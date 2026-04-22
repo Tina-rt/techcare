@@ -8,7 +8,9 @@ export const address = pgTable('address', {
   state: text('state'),
   zipCode: text('zip_code'),
   country: text('country').notNull(),
-  userId: integer('user_id'),
+  userId: integer('user_id')
+    .references(() => user.id, { onDelete: 'cascade' })
+    .notNull(),
 });
 
 export type Address = typeof address.$inferSelect;

@@ -17,34 +17,35 @@ export class UserService {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  async findAll(role?: 'USER' | 'ADMIN'): Promise<User[]> {
-    if (role) {
-      return this.db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.role, role));
-    }
-    return this.db.select().from(userTable);
+  async findAll(role?: 'USER' | 'ADMIN') {
+    return this.db.query.user.findMany({
+      where: role ? eq(userTable.role, role) : undefined,
+      with: {
+        address: true,
+      },
+    });
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
+  async findByEmail(email: string) {
     try {
-      const users = await this.db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, email));
-      return users[0];
+      return this.db.query.user.findFirst({
+        where: eq(userTable.email, email),
+        with: {
+          address: true,
+        },
+      });
     } catch {
       return undefined;
     }
   }
 
-  async findById(id: number): Promise<User | undefined> {
-    const users = await this.db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, id));
-    return users[0];
+  async findById(id: number) {
+    return this.db.query.user.findFirst({
+      where: eq(userTable.id, id),
+      with: {
+        address: true,
+      },
+    });
   }
 
   async getUserProfile(id: number) {

@@ -17,21 +17,47 @@ export class AuthMeController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Request() req: { user: AuthenticatedUser }): Promise<Omit<User, 'password'> | null> {
-    return this.authService.getProfile(req.user.userId);
+  async getProfile(
+    @Request() req: { user: AuthenticatedUser },
+  ): Promise<Omit<User, 'password'> | null> {
+    const profile = await this.authService.getProfile(req.user.userId);
+    if (profile && (profile as any).address) {
+      const { zipCode, ...address } = (profile as any).address;
+      return {
+        ...profile,
+        address: {
+          ...address,
+          zipcode: zipCode,
+        },
+      } as any;
+    }
+    return profile;
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateProfile(
     @Request() req: { user: AuthenticatedUser },
-    @Body() body: UpdateProfileData & { address?: { street?: string; town?: string; country?: string } },
+    @Body()
+    body: UpdateProfileData & {
+      address?: {
+        street?: string;
+        town?: string;
+        city?: string;
+        zipcode?: string;
+        country?: string;
+      };
+    },
   ) {
-    const { town, ...restAddress } = body.address || {};
+    const { town, city, zipcode, ...restAddress } = body.address || {};
     const updateData = {
       ...body,
       address: body.address
-        ? { ...restAddress, city: town }
+        ? {
+            ...restAddress,
+            city: city || town,
+            zipCode: zipcode,
+          }
         : undefined,
     };
     return this.authService.updateProfile(req.user.userId, updateData);

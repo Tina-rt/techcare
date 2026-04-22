@@ -7,6 +7,7 @@ import {
   InventoryWithProduct,
   UpdateStockDto,
   StockMovement,
+  StockMovementWithProduct,
 } from '@app/shared';
 
 @Injectable()
@@ -66,19 +67,19 @@ export class InventoryService {
     return this.aggregateProductInfo(inventory);
   }
 
-  async getMovements(productId?: string): Promise<StockMovement[]> {
-    console.log('sending get_movements', productId);
-    return sendAndCatch<StockMovement[]>(
+  async getMovements(productId?: string): Promise<StockMovementWithProduct[]> {
+    const movements = await sendAndCatch<StockMovement[]>(
       this.inventoryClient,
       'get_movements',
       productId || {},
     );
+    return this.aggregateProductInfo(movements);
   }
 
-  private async aggregateProductInfo(
-    inventory: Inventory[],
-  ): Promise<InventoryWithProduct[]> {
-    if (!inventory || !inventory.length) return [];
+  private async aggregateProductInfo<T extends { productId: string }>(
+    items: T[],
+  ): Promise<(T & { product: Product | null })[]> {
+    if (!items || !items.length) return [];
 
     try {
       const products = await sendAndCatch<Product[]>(
@@ -88,16 +89,19 @@ export class InventoryService {
       );
 
       const productMap = new Map(
-        products.map((p) => [(p as Product & { _id?: string })._id?.toString(), p]),
+        products.map((p) => [
+          (p as Product & { _id?: string })._id?.toString(),
+          p,
+        ]),
       );
 
-      return inventory.map((item) => ({
+      return items.map((item) => ({
         ...item,
         product: productMap.get(item.productId) ?? null,
       }));
     } catch (error) {
       this.logger.error('Failed to aggregate product info:', error);
-      return inventory.map((item) => ({ ...item, product: null }));
+      return items.map((item) => ({ ...item, product: null }) as any);
     }
   }
 }
