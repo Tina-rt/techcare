@@ -17,8 +17,8 @@ export class CartController {
   }
 
   @MessagePattern({ cmd: 'get_cart' })
-  async getCart(@Payload() data: { userId: string }) {
-    return this.cartService.getCart(data.userId);
+  async getCart(@Payload() data: { userId: number | string }) {
+    return this.cartService.getCart(Number(data.userId));
   }
 
   @MessagePattern({ cmd: 'update_cart_item' })
@@ -32,7 +32,7 @@ export class CartController {
   }
 
   @MessagePattern({ cmd: 'clear_cart' })
-  async clearCart(@Payload() data: { userId: string }) {
-    return this.cartService.clearCart(data.userId);
+  async clearCart(@Payload() data: { userId: number | string }) {
+    return this.cartService.clearCart(Number(data.userId));
   }
 }

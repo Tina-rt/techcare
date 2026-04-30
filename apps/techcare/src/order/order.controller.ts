@@ -10,61 +10,51 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import {
   CreateOrderDto,
   Order,
   UpdateOrderStatusDto,
-  sendAndCatch,
   convertToCsv,
+  sendAndCatch,
 } from '@app/shared';
+import { OrderService } from './order.service';
 
 @Controller('order')
 export class OrderController {
   constructor(
     @Inject('ORDER_MANAGER_SERVICE')
     private readonly orderClient: ClientProxy,
+    private readonly orderService: OrderService,
   ) {}
 
   @Post('create')
   async createOrder(@Body() body: CreateOrderDto): Promise<Order> {
-    return firstValueFrom<Order>(
-      this.orderClient.send({ cmd: 'create_order' }, body),
-    );
+    return sendAndCatch<Order>(this.orderClient, { cmd: 'create_order' }, body);
   }
 
   @Get(':orderId')
-  async getOrderById(@Param('orderId') orderId: string): Promise<Order> {
-    return firstValueFrom<Order>(
-      this.orderClient.send({ cmd: 'get_order' }, { orderId }),
-    );
+  async getOrderById(@Param('orderId') orderId: string): Promise<Order | null> {
+    return this.orderService.getOrderById(orderId);
   }
 
   @Get('user/:userId')
   async getUserOrders(@Param('userId') userId: string): Promise<Order[]> {
-    return firstValueFrom<Order[]>(
-      this.orderClient.send({ cmd: 'get_user_orders' }, { userId }),
-    );
+    return this.orderService.getUserOrders(userId);
   }
 
   @Get()
   async getAllOrders(): Promise<Order[]> {
-    return firstValueFrom<Order[]>(
-      this.orderClient.send({ cmd: 'get_all_orders' }, {}),
-    );
+    return this.orderService.getAllOrders();
   }
 
   @Get('export')
   async exportOrders(@Res() res: Response) {
-    const orders = await sendAndCatch<Order[]>(
-      this.orderClient,
-      { cmd: 'get_all_orders' },
-      {},
-    );
+    const orders = await this.orderService.getAllOrders();
 
     const csv = convertToCsv(orders, [
-      { field: 'id', header: 'ID' },
+      { field: '_id', header: 'ID' },
       { field: 'userId', header: 'Client ID' },
+      { field: 'userEmail', header: 'Email Client' },
       { field: 'totalAmount', header: 'Montant Total' },
       { field: 'status', header: 'Statut' },
       { field: 'paymentStatus', header: 'Paiement' },
@@ -78,15 +68,19 @@ export class OrderController {
 
   @Put('status')
   async updateOrderStatus(@Body() body: UpdateOrderStatusDto): Promise<Order> {
-    return firstValueFrom<Order>(
-      this.orderClient.send({ cmd: 'update_order_status' }, body),
+    return sendAndCatch<Order>(
+      this.orderClient,
+      { cmd: 'update_order_status' },
+      body,
     );
   }
 
   @Put('cancel/:orderId')
   async cancelOrder(@Param('orderId') orderId: string): Promise<Order> {
-    return firstValueFrom<Order>(
-      this.orderClient.send({ cmd: 'cancel_order' }, { orderId }),
+    return sendAndCatch<Order>(
+      this.orderClient,
+      { cmd: 'cancel_order' },
+      { orderId },
     );
   }
 }

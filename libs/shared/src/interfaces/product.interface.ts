@@ -14,4 +14,5 @@ export interface Product {
   image: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+  deletedAt?: string | Date | null;
 }

@@ -221,6 +221,33 @@ export class InventoryManagerService {
     return results as StockMovement[];
   }
 
+  async zeroOutInventory(productId: string): Promise<void> {
+    this.logger.log(`Zeroing out inventory for soft-deleted product: ${productId}`);
+    try {
+      const existing = await this.getStock(productId);
+      if (existing) {
+        await this.db
+          .update(inventoryTable)
+          .set({ quantity: 0, reservedQuantity: 0, lastUpdated: new Date() })
+          .where(eq(inventoryTable.productId, productId));
+
+        await this.logMovement({
+          productId,
+          type: StockMovementType.ADJUSTMENT,
+          quantityChanged: -existing.quantity,
+          previousQuantity: existing.quantity,
+          newQuantity: 0,
+          reason: 'Product soft-deleted',
+        });
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to zero out inventory for product ${productId}:`,
+        error,
+      );
+    }
+  }
+
   async deleteInventory(productId: string): Promise<void> {
     this.logger.log(`Deleting inventory record for product: ${productId}`);
     try {

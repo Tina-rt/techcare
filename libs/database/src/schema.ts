@@ -21,6 +21,8 @@ import {
 } from './schemas/stock-movement.schema';
 import { carts, type CartRow, type NewCartRow } from './schemas/cart.schema';
 import { orders, type OrderRow, type NewOrderRow } from './schemas/order.schema';
+import { settings, type Settings, type NewSettings } from './schemas/settings.schema';
+import { blogPosts, type BlogPost, type NewBlogPost } from './schemas/blog.schema';
 
 export const userRelations = relations(user, ({ one }) => ({
   address: one(address, {
@@ -54,3 +56,5 @@ export { stockMovements, type StockMovement, type NewStockMovement };
 export { address };
 export { carts, type CartRow, type NewCartRow };
 export { orders, type OrderRow, type NewOrderRow };
+export { settings, type Settings, type NewSettings };
+export { blogPosts, type BlogPost, type NewBlogPost };

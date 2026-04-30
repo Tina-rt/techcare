@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   ProductDocument,
@@ -8,6 +8,7 @@ import {
 import { FilterQuery, Model } from 'mongoose';
 import { Product, CreateProductDto, ProductFiltersDto } from '@app/shared';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ProductService {
@@ -22,17 +23,31 @@ export class ProductService {
     private fileClient: ClientProxy,
   ) {}
 
+  private readonly logger = new Logger(ProductService.name);
+
   async findAll(
     filters: ProductFiltersDto = {},
     populateCategorys: boolean = true,
   ): Promise<Product[]> {
     const query: FilterQuery<ProductDocument> = {};
+    console.log('filter', filters);
+
+    // Exclude soft-deleted products by default
+    if (!filters.includeDeleted) {
+      query.deletedAt = null;
+    }
 
     // Map filters to Mongoose query
-    if (filters.category) {
-      query.category = { $in: filters.category };
-    } else if (filters.categories) {
-      query.category = { $in: filters.categories };
+    const categoryIds = filters.category
+      ? Array.isArray(filters.category)
+        ? filters.category
+        : [filters.category]
+      : filters.categories || [];
+
+    if (categoryIds.length > 0) {
+      // Mongoose auto-casts strings to ObjectIds for fields defined as Types.ObjectId
+      // We use the standard $in query which is compatible with array fields.
+      query.category = { $in: categoryIds };
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -46,63 +61,28 @@ export class ProductService {
     }
 
     if (filters.searchTerm) {
-      query.$text = { $search: filters.searchTerm };
+      const searchRegex = new RegExp(filters.searchTerm, 'i');
+      query.$or = [
+        { name: { $regex: searchRegex } },
+        { description: { $regex: searchRegex } },
+      ];
     }
+
+    console.log('Query', query);
+
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
+    const skip = (page - 1) * limit;
 
     const results = await this.produitModel
       .find(query)
       .populate(populateCategorys ? { path: 'category', select: 'name' } : [])
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean()
       .exec();
     return results as unknown as Product[];
-  }
-
-  async searchProducts(
-    keyword: string,
-    filters: ProductFiltersDto = {},
-  ): Promise<Product[]> {
-    const query: FilterQuery<ProductDocument> = {};
-
-    if (keyword && keyword.trim()) {
-      // Utilise l'index texte MongoDB pour la recherche full-text
-      query.$text = { $search: keyword.trim() };
-    } else if (filters.searchTerm) {
-      query.$text = { $search: filters.searchTerm.trim() };
-    } else {
-      // Sans mot-clé, recherche par regex sur le nom (fallback)
-      query.name = { $regex: keyword ?? '', $options: 'i' };
-    }
-
-    if (filters.category) {
-      query.category = { $in: filters.category };
-    } else if (filters.categories) {
-      query.category = { $in: filters.categories };
-    }
-    const priceFilter: { $gte?: number; $lte?: number } = {};
-    if (filters.minPrice !== undefined) {
-      priceFilter.$gte = filters.minPrice;
-    }
-    if (filters.maxPrice !== undefined) {
-      priceFilter.$lte = filters.maxPrice;
-    }
-    if (Object.keys(priceFilter).length > 0) {
-      query.price = priceFilter;
-    }
-    if (filters.isActive !== undefined) {
-      query.active = filters.isActive;
-    }
-
-    let baseQuery = this.produitModel
-      .find(query)
-      .populate({ path: 'category', select: 'name description' });
-
-    // Si recherche textuelle, trier par score de pertinence
-    if (keyword && keyword.trim()) {
-      baseQuery = baseQuery.sort({ score: { $meta: 'textScore' } });
-    }
-
-    const results = await baseQuery.lean<Product[]>().exec();
-    return results;
   }
 
   async findById(id: string): Promise<Product> {
@@ -168,23 +148,31 @@ export class ProductService {
 
   async deleteById(id: string): Promise<Product | null> {
     const deleted = await this.produitModel
-      .findByIdAndDelete(id)
+      .findByIdAndUpdate(id, { deletedAt: new Date() }, { new: true })
       .lean<Product>()
       .exec();
 
     if (deleted) {
-      console.log('Emitting product_deleted event for:', id);
-      this.inventoryClient.emit('product_deleted', id);
-
-      if (deleted.image) {
-        const key = this.extractKeyFromUrl(deleted.image);
-        if (key) {
-          console.log('Requesting image deletion for key:', key);
-          this.fileClient.emit('delete_file', { key });
-        }
-      }
+      console.log('Emitting product_soft_deleted event for:', id);
+      // Zero out inventory stock instead of deleting the record
+      this.inventoryClient.emit('product_soft_deleted', id);
+      // Do NOT delete the S3 image here — the cleanup cron handles it after 30 days
     }
     return deleted;
+  }
+
+  async restoreById(id: string): Promise<Product | null> {
+    const restored = await this.produitModel
+      .findByIdAndUpdate(id, { deletedAt: null }, { new: true })
+      .lean<Product>()
+      .exec();
+    if (!restored) {
+      throw new RpcException({
+        message: 'Product not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+    return restored;
   }
 
   private extractKeyFromUrl(url: string): string | null {
@@ -204,7 +192,7 @@ export class ProductService {
 
   async countProducts(): Promise<number> {
     console.log('Counting products');
-    const count = await this.produitModel.countDocuments().exec();
+    const count = await this.produitModel.countDocuments({ deletedAt: null }).exec();
     console.log('Count:', count);
     return count;
   }
@@ -218,7 +206,7 @@ export class ProductService {
     try {
       for (const item of items) {
         const product = await this.produitModel.findById(item.productId).exec();
-        if (!product) {
+        if (!product || product.deletedAt) {
           throw new Error(`Product ${item.productId} not found`);
         }
       }
@@ -236,6 +224,46 @@ export class ProductService {
         orderId,
         reason: message,
       });
+    }
+  }
+
+  /**
+   * Cron job: Delete S3 images for products soft-deleted more than 30 days ago,
+   * then permanently remove the MongoDB document.
+   * Runs daily at 3:00 AM.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async cleanupDeletedProducts(): Promise<void> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const expiredProducts = await this.produitModel
+      .find({ deletedAt: { $ne: null, $lte: thirtyDaysAgo } })
+      .lean()
+      .exec();
+
+    this.logger.log(
+      `[Cleanup] Found ${expiredProducts.length} product(s) to permanently delete`,
+    );
+
+    for (const product of expiredProducts) {
+      // Delete S3 image
+      if (product.image) {
+        const key = this.extractKeyFromUrl(product.image);
+        if (key) {
+          this.logger.log(`[Cleanup] Deleting S3 image: ${key}`);
+          this.fileClient.emit('delete_file', { key });
+        }
+      }
+
+      // Delete inventory record permanently
+      this.inventoryClient.emit('product_deleted', product._id.toString());
+
+      // Permanently remove MongoDB document
+      await this.produitModel.findByIdAndDelete(product._id).exec();
+      this.logger.log(
+        `[Cleanup] Permanently deleted product: ${product._id} (${product.name})`,
+      );
     }
   }
 }

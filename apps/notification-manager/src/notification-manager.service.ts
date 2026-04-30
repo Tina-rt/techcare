@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationGateway } from './notification-realtime/notification.gateway';
 import { NotificationRealtimeService } from './notification-realtime/notification-realtime.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class NotificationManagerService {
   constructor(
-    private readonly notificationGateway: NotificationGateway,
     private readonly notificationRealtimeService: NotificationRealtimeService,
   ) {}
 
@@ -15,12 +13,6 @@ export class NotificationManagerService {
     const [savedNotification] =
       await this.notificationRealtimeService.createNotification(data);
 
-    // 2. Dispatch in real-time if a userId is provided
-    if (data.userId) {
-      const channel = `user_${data.userId}`;
-      this.notificationGateway.sendNotification(savedNotification, channel);
-    }
-
     return savedNotification;
   }
 
@@ -28,5 +20,9 @@ export class NotificationManagerService {
     return this.notificationRealtimeService.getAllNotificationsFromUserId(
       userId,
     );
+  }
+
+  async markAsRead(notificationId: number) {
+    return this.notificationRealtimeService.markAsRead(notificationId);
   }
 }

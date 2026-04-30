@@ -5,7 +5,7 @@ import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { PaymentService } from './payment.service';
 import { CreatePaymentIntentDto } from './dtos/create-payment-intent.dto';
 import { ConfirmPaymentDto } from './dtos/confirm-payment.dto';
-import { StockReservedPayload } from '@app/shared';
+import type { StockReservedPayload } from '@app/shared';
 
 @Controller('payment')
 export class PaymentController {
@@ -49,6 +49,15 @@ export class PaymentController {
       throw new Error('Raw body is missing');
     }
     return this.paymentService.handleWebhook(sig, request.rawBody);
+  }
+
+  @EventPattern('stripe_webhook')
+  async handleStripeWebhookEvent(@Payload() data: { signature: string; payload: string }) {
+    console.log('[PAYMENT_MANAGER] Received Stripe webhook via RabbitMQ');
+    return this.paymentService.handleWebhook(
+      data.signature, 
+      Buffer.from(data.payload, 'utf8')
+    );
   }
 
   @EventPattern('stock_reserved')

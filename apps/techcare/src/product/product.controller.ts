@@ -24,6 +24,7 @@ export class ProductController {
 
   @Get()
   getAllProducts(@Query() filters: ProductFiltersDto) {
+    console.log('[product controller] filters received', filters);
     return this.productService.findAll(filters);
   }
 
@@ -81,5 +82,11 @@ export class ProductController {
   @Delete(':id')
   deleteProduct(@Param('id') id: string) {
     return this.productService.delete(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/restore')
+  restoreProduct(@Param('id') id: string) {
+    return this.productService.restore(id);
   }
 }

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
+import { ClientProxy } from '@nestjs/microservices';
 import { DATABASE_CONNECTION } from '@app/database';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 // import { PrismaModuleService } from '../prisma-module/prisma-module.service';
@@ -11,9 +12,10 @@ export class NotificationRealtimeService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
+    @Inject('GATEWAY_SERVICE') private readonly gatewayClient: ClientProxy,
   ) {}
-  createNotification(notification: CreateNotificationDto) {
-    return this.db
+  async createNotification(notification: CreateNotificationDto) {
+    const result = await this.db
       .insert(schema.notification)
       .values({
         title: notification.title,
@@ -26,6 +28,11 @@ export class NotificationRealtimeService {
         createdAt: new Date(),
       })
       .returning();
+
+    if (result && result.length > 0) {
+      this.gatewayClient.emit('notification_created', result[0]);
+    }
+    return result;
   }
 
   getAllNotificationsFromUserId(userId: number | string) {
@@ -39,10 +46,11 @@ export class NotificationRealtimeService {
     return this.db.select().from(schema.notification);
   }
 
-  //   markAsRead(notificationId: number) {
-  //     return this.prisma.notification.update({
-  //       where: { id: notificationId },
-  //       data: { read: true },
-  //     });
-  //   }
+  async markAsRead(notificationId: number) {
+    return this.db
+      .update(schema.notification)
+      .set({ read: true })
+      .where(eq(schema.notification.id, notificationId))
+      .returning();
+  }
 }

@@ -9,7 +9,9 @@ describe('NotificationRealtimeController', () => {
       controllers: [NotificationRealtimeController],
     }).compile();
 
-    controller = module.get<NotificationRealtimeController>(NotificationRealtimeController);
+    controller = module.get<NotificationRealtimeController>(
+      NotificationRealtimeController,
+    );
   });
 
   it('should be defined', () => {

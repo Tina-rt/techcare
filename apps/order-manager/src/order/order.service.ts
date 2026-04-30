@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RpcException, ClientProxy } from '@nestjs/microservices';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, ne, or } from 'drizzle-orm';
 import * as schema from '@app/database/schema';
-import { orders } from '@app/database/schema';
+import { orders, User } from '@app/database/schema';
 import { DATABASE_CONNECTION } from '@app/database';
 import {
   Order,
@@ -14,9 +14,9 @@ import {
   OrderItem,
   ShippingAddress,
   DashboardStats,
+  sendAndCatch,
 } from '@app/shared';
 import { UpdateOrderStatusDto } from './dtos/update-order-status.dto';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrderService {
@@ -32,11 +32,13 @@ export class OrderService {
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
-    const { userId, shippingAddress, notes } = createOrderDto;
+    const { userId, shippingAddress, shippingFee, notes } = createOrderDto;
 
     // Get cart from cart service
-    const cart = await firstValueFrom(
-      this.cartClient.send<Cart>({ cmd: 'get_cart' }, { userId }),
+    const cart = await sendAndCatch<Cart>(
+      this.cartClient,
+      { cmd: 'get_cart' },
+      { userId },
     );
 
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -51,6 +53,7 @@ export class OrderService {
         totalAmount: cart.totalAmount,
         totalItems: cart.totalItems,
         shippingAddress,
+        shippingFee,
         notes,
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.PENDING,
@@ -58,9 +61,7 @@ export class OrderService {
       .returning();
 
     // Clear cart after order creation
-    await firstValueFrom(
-      this.cartClient.send({ cmd: 'clear_cart' }, { userId }),
-    );
+    await sendAndCatch(this.cartClient, { cmd: 'clear_cart' }, { userId });
 
     // Initiate Saga: validate products via ProductService
     this.productClient.emit('order_created', {
@@ -70,10 +71,10 @@ export class OrderService {
     });
 
     // Send pending order notification
-    this.notificationClient.emit('order_created_pending', {
+    this.notificationClient.emit('send_notification', {
       userId,
-      orderId: savedOrder.id.toString(),
-      totalAmount: savedOrder.totalAmount,
+      title: 'Commande Initiée',
+      message: `Votre commande #${savedOrder.id} a été créée et est en attente de paiement.`,
     });
 
     return this.toOrder(savedOrder);
@@ -162,6 +163,42 @@ export class OrderService {
       .where(eq(orders.id, parseInt(orderId)))
       .returning();
 
+    // Clean obsolete checkout rows
+    if (paymentStatus === 'completed') {
+      await this.db
+        .update(orders)
+        .set({
+          status: OrderStatus.CANCELLED,
+          notes: 'Obsolete - Remplacée par une commande payée',
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(orders.userId, existing.userId),
+            ne(orders.id, parseInt(orderId)),
+            or(
+              eq(orders.paymentStatus, PaymentStatus.PENDING),
+              eq(orders.paymentStatus, PaymentStatus.FAILED),
+            ),
+          ),
+        );
+    }
+
+    // Trigger Notifications based on new payment status
+    if (paymentStatus === 'completed') {
+      this.notificationClient.emit('send_notification', {
+        userId: existing.userId,
+        title: 'Paiement Réussi',
+        message: `Le paiement de votre commande #${orderId} a été validé. Elle est en cours de préparation.`,
+      });
+    } else if (paymentStatus === 'failed') {
+      this.notificationClient.emit('send_notification', {
+        userId: existing.userId,
+        title: 'Paiement Refusé',
+        message: `Le paiement de la commande #${orderId} a échoué. Vous pouvez réessayer le paiement depuis votre profil.`,
+      });
+    }
+
     return this.toOrder(updated);
   }
 
@@ -182,7 +219,11 @@ export class OrderService {
 
     const [updated] = await this.db
       .update(orders)
-      .set({ status: OrderStatus.CANCELLED, updatedAt: new Date() })
+      .set({
+        status: OrderStatus.CANCELLED,
+        paymentStatus: PaymentStatus.CANCELLED,
+        updatedAt: new Date(),
+      })
       .where(eq(orders.id, parseInt(orderId)))
       .returning();
 

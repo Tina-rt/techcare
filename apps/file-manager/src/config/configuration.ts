@@ -19,6 +19,8 @@ export default () => ({
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10), // 10MB
     allowedMimeTypes: process.env.ALLOWED_MIME_TYPES?.split(',') || [
       'image/jpeg',
+      'image/jpg',
+      'image/avif',
       'image/png',
       'image/webp',
       'image/gif',

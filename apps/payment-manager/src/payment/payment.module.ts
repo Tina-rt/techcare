@@ -10,7 +10,9 @@ import { PaymentService } from './payment.service';
         name: 'ORDER_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+          urls: [
+            process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
+          ],
           queue: 'order_manager_queue',
           queueOptions: {
             durable: false,
@@ -21,7 +23,9 @@ import { PaymentService } from './payment.service';
         name: 'INVENTORY_MANAGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+          urls: [
+            process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
+          ],
           queue: 'inventory_service_queue',
           queueOptions: {
             durable: false,

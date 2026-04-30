@@ -72,8 +72,12 @@ services:
     ports:
       - '${GATEWAY_PORT}:4000'
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
@@ -106,9 +110,14 @@ services:
         APP_NAME: product-manager
     container_name: techcare_product
     depends_on:
-      - rabbitmq
-      - mongodb
+      rabbitmq:
+        condition: service_started
+      mongodb:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
       - MONGODB_URI=${MONGODB_URI_PRODUCT_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
@@ -142,10 +151,14 @@ services:
         APP_NAME: order-manager
     container_name: techcare_order
     depends_on:
-      - rabbitmq
-      - mongodb
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
     environment:
-      - MONGODB_URI=${MONGODB_URI_ORDER_DOCKER}
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network
@@ -158,9 +171,14 @@ services:
         APP_NAME: payment-manager
     container_name: techcare_payment
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
     networks:
       - techcare_network
 
@@ -174,6 +192,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_started
+      postgres:
+        condition: service_healthy
       db-migrate:
         condition: service_completed_successfully
     environment:
@@ -193,6 +213,11 @@ services:
       - rabbitmq
     environment:
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
+      - AWS_CLOUDFRONT_URL=${AWS_CLOUDFRONT_URL}
     networks:
       - techcare_network
 
@@ -204,10 +229,12 @@ services:
         APP_NAME: cart-manager
     container_name: techcare_cart
     depends_on:
-      - rabbitmq
-      - mongodb
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
-      - MONGODB_URI=${MONGODB_URI_CART_DOCKER}
+      - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
     networks:
       - techcare_network

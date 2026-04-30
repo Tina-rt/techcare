@@ -11,7 +11,9 @@ import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SettingsModule } from './settings/settings.module';
 import { UserModule } from './user/user.module';
+import { BlogModule } from './blog/blog.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -30,7 +32,9 @@ import { ConfigModule } from '@nestjs/config';
     OrderModule,
     PaymentModule,
     DashboardModule,
+    SettingsModule,
     UserModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

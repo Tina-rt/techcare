@@ -1,4 +1,8 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AwsConfigService } from './config/aws.config';
 import { ConfigService } from '@nestjs/config';
@@ -87,6 +91,8 @@ export class FileManagerService {
   }
   private validateFileType(mimeType: string): void {
     const allowedTypes = this.configService.get('app.allowedMimeTypes');
+    console.log('mimeType', mimeType);
+    console.log('allowedTypes', allowedTypes);
     if (!allowedTypes.includes(mimeType)) {
       throw new BadRequestException(`File type ${mimeType} is not allowed`);
     }
@@ -99,6 +105,8 @@ export class FileManagerService {
       jpeg: 'image/jpeg',
       png: 'image/png',
       gif: 'image/gif',
+      avif: 'image/avif',
+      webp: 'image/webp',
       pdf: 'application/pdf',
       txt: 'text/plain',
       json: 'application/json',

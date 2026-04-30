@@ -2,9 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RpcExceptionFilter } from './common/filters/rpc-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
+import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -25,6 +26,19 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new RpcExceptionFilter());
+
+  app.connectMicroservice({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+      queue: 'gateway_queue',
+      queueOptions: {
+        durable: false,
+      },
+    },
+  });
+
+  await app.startAllMicroservices();
   await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap().catch((err) => console.error(err));

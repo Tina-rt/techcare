@@ -4,7 +4,7 @@ import { ProductFilters } from '@app/shared';
 
 export type ProductDocument = HydratedDocument<Product>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Product {
   @Prop({ required: true })
   name: string;
@@ -44,6 +44,9 @@ export class Product {
 
   @Prop()
   updatedAt: Date;
+
+  @Prop({ default: null, type: Date })
+  deletedAt: Date | null;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
@@ -69,8 +72,10 @@ ProductSchema.statics.search = function (
   if (query) {
     searchQuery.$text = { $search: query };
   }
-  if (filters.categories && filters.categories.length > 0) {
-    searchQuery.category = { $in: filters.categories };
+  const categoryIds = filters.categories || [];
+
+  if (categoryIds.length > 0) {
+    searchQuery.category = { $in: categoryIds };
   }
   if (filters.minPrice) {
     searchQuery.price = { ...searchQuery.price, $gte: filters.minPrice };

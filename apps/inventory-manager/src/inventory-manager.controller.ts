@@ -67,10 +67,19 @@ export class InventoryManagerController {
     return this.inventoryManagerService.getMovements(productId);
   }
 
+  @EventPattern('product_soft_deleted')
+  handleProductSoftDeleted(@Payload() productId: string) {
+    console.log(
+      '[Inventory Manager] Zeroing out inventory for soft-deleted product:',
+      productId,
+    );
+    return this.inventoryManagerService.zeroOutInventory(productId);
+  }
+
   @EventPattern('product_deleted')
   handleProductDeleted(@Payload() productId: string) {
     console.log(
-      '[Inventory Manager] Deleting inventory for product:',
+      '[Inventory Manager] Permanently deleting inventory for product:',
       productId,
     );
     return this.inventoryManagerService.deleteInventory(productId);

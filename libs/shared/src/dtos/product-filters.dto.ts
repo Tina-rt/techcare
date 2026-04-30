@@ -61,4 +61,19 @@ export class ProductFiltersDto {
   @IsOptional()
   @IsString()
   searchTerm?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  page?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  limit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  includeDeleted?: boolean;
 }

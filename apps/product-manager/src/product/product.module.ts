@@ -4,9 +4,11 @@ import { ProductService } from './product.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from './schemas/product.schema';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     ClientsModule.register([
       {

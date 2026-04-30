@@ -55,6 +55,22 @@ export class OrderController {
     );
   }
 
+  @EventPattern('update_payment_status')
+  async handleUpdatePaymentStatusEvent(
+    @Payload()
+    data: {
+      orderId: string;
+      paymentStatus: string;
+      paymentIntentId?: string;
+    },
+  ): Promise<void> {
+    await this.orderService.updatePaymentStatus(
+      data.orderId,
+      data.paymentStatus,
+      data.paymentIntentId,
+    );
+  }
+
   @MessagePattern({ cmd: 'cancel_order' })
   async cancelOrder(@Payload() data: { orderId: string }): Promise<Order> {
     return this.orderService.cancelOrder(data.orderId);

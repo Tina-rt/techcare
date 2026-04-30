@@ -9,7 +9,6 @@ import Stripe from 'stripe';
 import { CreatePaymentIntentDto } from './dtos/create-payment-intent.dto';
 import { ConfirmPaymentDto } from './dtos/confirm-payment.dto';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import { StockReservedPayload } from '@app/shared';
 
 @Injectable()
@@ -50,17 +49,14 @@ export class PaymentService {
         },
       });
 
+      console.log('Emitting update_payment_status for order: ' + orderId);
+
       // Update order with payment intent ID
-      await firstValueFrom(
-        this.orderClient.send(
-          { cmd: 'update_payment_status' },
-          {
-            orderId,
-            paymentStatus: 'pending',
-            paymentIntentId: paymentIntent.id,
-          },
-        ),
-      );
+      this.orderClient.emit('update_payment_status', {
+        orderId,
+        paymentStatus: 'pending',
+        paymentIntentId: paymentIntent.id,
+      });
 
       return {
         clientSecret: paymentIntent.client_secret,
@@ -84,16 +80,14 @@ export class PaymentService {
 
       if (paymentIntent.status === 'succeeded') {
         // Update order payment status
-        await firstValueFrom(
-          this.orderClient.send(
-            { cmd: 'update_payment_status' },
-            {
-              orderId,
-              paymentStatus: 'completed',
-              paymentIntentId,
-            },
-          ),
+        console.log(
+          '[Payment succeeded] Processing payment for order: ' + orderId,
         );
+        this.orderClient.emit('update_payment_status', {
+          orderId,
+          paymentStatus: 'completed',
+          paymentIntentId,
+        });
 
         return {
           success: true,
@@ -115,7 +109,7 @@ export class PaymentService {
     }
   }
 
-  async handleWebhook(sig: string, payload: Buffer): Promise<unknown> {
+  handleWebhook(sig: string, payload: Buffer): { received: boolean } {
     const webhookSecret = this.configService.get<string>(
       'STRIPE_WEBHOOK_SECRET',
     );
@@ -137,16 +131,11 @@ export class PaymentService {
           const orderId = paymentIntent.metadata.orderId;
 
           if (orderId) {
-            await firstValueFrom(
-              this.orderClient.send(
-                { cmd: 'update_payment_status' },
-                {
-                  orderId,
-                  paymentStatus: 'completed',
-                  paymentIntentId: paymentIntent.id,
-                },
-              ),
-            );
+            this.orderClient.emit('update_payment_status', {
+              orderId,
+              paymentStatus: 'completed',
+              paymentIntentId: paymentIntent.id,
+            });
           }
           break;
         }
@@ -156,16 +145,11 @@ export class PaymentService {
           const failedOrderId = failedPayment.metadata.orderId;
 
           if (failedOrderId) {
-            await firstValueFrom(
-              this.orderClient.send(
-                { cmd: 'update_payment_status' },
-                {
-                  orderId: failedOrderId,
-                  paymentStatus: 'failed',
-                  paymentIntentId: failedPayment.id,
-                },
-              ),
-            );
+            this.orderClient.emit('update_payment_status', {
+              orderId: failedOrderId,
+              paymentStatus: 'failed',
+              paymentIntentId: failedPayment.id,
+            });
           }
           break;
         }

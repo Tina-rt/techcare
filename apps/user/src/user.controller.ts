@@ -19,6 +19,7 @@ export class UserController {
 
   @MessagePattern('find_user_by_id')
   findById(@Payload() id: number) {
+    console.log('find_user_by_id', id);
     return this.userService.findById(id);
   }
 

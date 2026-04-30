@@ -10,7 +10,7 @@ import {
   Inject,
   UseGuards,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { sendAndCatch, convertToCsv } from '@app/shared';

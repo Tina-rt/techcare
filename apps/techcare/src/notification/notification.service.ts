@@ -21,4 +21,12 @@ export class NotificationService {
       userId ?? 0,
     );
   }
+
+  async markAsRead(notificationId: number): Promise<unknown> {
+    return sendAndCatch<unknown>(
+      this.notificationManagerService,
+      'mark_as_read',
+      notificationId,
+    );
+  }
 }

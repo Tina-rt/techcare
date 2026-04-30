@@ -4,6 +4,7 @@ import {
   Logger,
   InternalServerErrorException,
   HttpException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -16,7 +17,7 @@ import {
 import { FileService } from '../file/file.service';
 
 @Injectable()
-export class ProductService {
+export class ProductService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ProductService.name);
 
   constructor(
@@ -26,6 +27,57 @@ export class ProductService {
     private readonly inventoryClient: ClientProxy,
     private readonly fileService: FileService,
   ) {}
+
+  async onApplicationBootstrap() {
+    this.logger.log(
+      'Verifying inventory for all products on application launch...',
+    );
+    try {
+      // Fetch all products including soft-deleted ones
+      const products = await sendAndCatch<Product[]>(
+        this.productClient,
+        'find_all_products',
+        { includeDeleted: true },
+      );
+
+      const inventory = await sendAndCatch<Inventory[]>(
+        this.inventoryClient,
+        'find_all_inventory',
+        {},
+      );
+
+      const existingProductIds = new Set(
+        inventory.map((item) => item.productId.toString()),
+      );
+
+      let createdCount = 0;
+
+      for (const product of products) {
+        const prodId =
+          (product as Product & { _id?: string })._id || product._id;
+        if (!prodId) continue;
+        if (!existingProductIds.has(prodId.toString())) {
+          this.logger.log(
+            `Missing inventory for product ${prodId} (${product.name}). Creating inventory record...`,
+          );
+          await sendAndCatch(this.inventoryClient, 'update_stock', {
+            productId: prodId.toString(),
+            quantity: product.quantity ?? 0,
+          });
+          createdCount++;
+        }
+      }
+
+      this.logger.log(
+        `Inventory verification complete. Created ${createdCount} missing inventory record(s).`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to verify/create inventory on application launch: ${error.message}`,
+        error.stack,
+      );
+    }
+  }
 
   async findAll(filters: ProductFiltersDto = {}): Promise<Product[]> {
     const products = await sendAndCatch<Product[]>(
@@ -133,13 +185,18 @@ export class ProductService {
         throw error;
       }
       throw new InternalServerErrorException(
-        error.message || 'An unexpected error occurred while updating the product',
+        error.message ||
+          'An unexpected error occurred while updating the product',
       );
     }
   }
 
   async delete(id: string): Promise<Product> {
     return sendAndCatch<Product>(this.productClient, 'delete_product', id);
+  }
+
+  async restore(id: string): Promise<Product> {
+    return sendAndCatch<Product>(this.productClient, 'restore_product', id);
   }
 
   private async aggregateStock(products: Product[]): Promise<Product[]> {
@@ -158,7 +215,10 @@ export class ProductService {
 
       return products.map((product) => ({
         ...product,
-        quantity: stockMap.get((product as Product & { _id?: string })._id?.toString()) ?? 0,
+        quantity:
+          stockMap.get(
+            (product as Product & { _id?: string })._id?.toString(),
+          ) ?? 0,
       }));
     } catch (error) {
       console.error('Failed to aggregate stock:', error);

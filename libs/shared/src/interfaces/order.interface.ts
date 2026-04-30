@@ -24,6 +24,7 @@ export interface ShippingAddress {
 export interface Order {
   _id?: string;
   userId: number;
+  userEmail?: string;
   items: OrderItem[];
   totalAmount: number;
   totalItems: number;

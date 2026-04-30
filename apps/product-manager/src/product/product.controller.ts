@@ -16,10 +16,12 @@ export class ProductController {
   @MessagePattern('search_products')
   searchProducts(
     @Payload()
-    payload: ProductFiltersDto & { keyword: string },
+    payload: ProductFiltersDto & { keyword?: string },
   ) {
     const { keyword, ...filters } = payload;
-    return this.productService.searchProducts(keyword, filters);
+    // Map keyword to searchTerm for the unified findAll method
+    if (keyword) filters.searchTerm = keyword;
+    return this.productService.findAll(filters, true);
   }
 
   @Get(':id')
@@ -50,6 +52,11 @@ export class ProductController {
   @MessagePattern('delete_product')
   deleteProduct(@Payload() id: string) {
     return this.productService.deleteById(id);
+  }
+
+  @MessagePattern('restore_product')
+  restoreProduct(@Payload() id: string) {
+    return this.productService.restoreById(id);
   }
 
   @EventPattern('order_created')

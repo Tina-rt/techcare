@@ -20,11 +20,11 @@ export class ShippingAddressDto {
   @IsString()
   city: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   state: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   postalCode: string;
 
@@ -32,7 +32,7 @@ export class ShippingAddressDto {
   @IsString()
   country: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   phone?: string;
 }
