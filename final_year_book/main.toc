@@ -1,120 +1,144 @@
 \@ifundefined {etoctocstyle}{\let \etoc@startlocaltoc \@gobble \let \etoc@settocdepth \@gobble \let \etoc@depthtag \@gobble \let \etoc@setlocaltop \@gobble }{}
 \babel@toc {french}{}\relax 
 \contentsline {chapter}{REMERCIEMENTS}{i}{etoc@tocid.1}%
-\contentsline {chapter}{RÉSUMÉ}{ii}{etoc@tocid.1}%
-\contentsline {chapter}{ABSTRACT}{iii}{etoc@tocid.1}%
-\contentsline {chapter}{LISTE DES ABRÉVIATIONS, SIGLES ET ACRONYMES}{vi}{etoc@tocid.2}%
-\contentsline {chapter}{GLOSSAIRE}{viii}{table.0.1}%
-\contentsline {chapter}{LISTE DES TABLEAUX}{ix}{table.0.1}%
-\contentsline {chapter}{LISTE DES FIGURES}{x}{table.0.1}%
+\contentsline {chapter}{LISTE DES ABRÉVIATIONS, SIGLES ET ACRONYMES}{iv}{etoc@tocid.2}%
+\contentsline {chapter}{GLOSSAIRE}{vi}{table.0.1}%
+\contentsline {chapter}{LISTE DES TABLEAUX}{vii}{table.0.1}%
+\contentsline {chapter}{LISTE DES FIGURES}{viii}{table.0.1}%
 \contentsline {chapter}{INTRODUCTION}{1}{table.0.1}%
 \contentsline {chapter}{CHAPITRE I - CONTEXTE GÉNÉRAL DU PROJET}{2}{table.0.1}%
 \contentsline {section}{I.1. Présentation de l'INSI}{2}{section*.1}%
 \contentsline {subsection}{I.1.1. Information d'ordre général}{2}{section*.1}%
 \contentsline {subsection}{I.1.2. Missions et historiques}{2}{section*.1}%
 \contentsline {subsection}{I.1.3. Organigramme de l'INSI}{3}{section*.1}%
-\contentsline {subsection}{I.1.4. Domaine de spécialisation}{4}{figure.0.1}%
-\contentsline {subsection}{I.1.5 Architectures des formations pédagogiques}{5}{figure.0.1}%
-\contentsline {subsection}{I.1.6. Relations de l'INSI avec les entreprises et les organismes}{6}{table.0.2}%
-\contentsline {subsection}{I.1.7. Partenariat au niveau international}{6}{table.0.2}%
-\contentsline {subsection}{I.1.8. Parcours professionnels des diplômés}{7}{table.0.2}%
-\contentsline {subsection}{I.1.9. Ressources humaines}{8}{table.0.2}%
-\contentsline {section}{I.2. Contexte professionnel et entreprise d'accueil}{9}{table.0.2}%
-\contentsline {subsection}{I.2.1. Présentation de l'entreprise d'accueil}{9}{section*.2}%
-\contentsline {subsection}{I.2.2. Contexte du projet}{9}{section*.2}%
-\contentsline {section}{I.3 Problématique et justification du projet}{10}{section*.2}%
-\contentsline {section}{I.4 Objectifs et périmètre du projet}{10}{section*.2}%
-\contentsline {section}{I.5 Méthodologie et plan de travail}{10}{section*.2}%
-\contentsline {subsection}{I.5.1 Méthodologie de gestion de projet : Scrum}{11}{section*.3}%
-\contentsline {subsection}{I.5.2 Plan de travail et étapes de réalisation}{11}{section*.3}%
+\contentsline {subsection}{I.1.4. Domaine de spécialisation}{4}{figure.caption.2}%
+\contentsline {subsection}{I.1.5 Architectures des formations pédagogiques}{6}{figure.caption.2}%
+\contentsline {subsection}{I.1.6. Relations de l'INSI avec les entreprises et les organismes}{6}{table.caption.3}%
+\contentsline {subsection}{I.1.7. Partenariat au niveau international}{6}{table.caption.3}%
+\contentsline {subsection}{I.1.8. Parcours professionnels des diplômés}{7}{table.caption.3}%
+\contentsline {subsection}{I.1.9. Ressources humaines}{9}{table.caption.3}%
+\contentsline {section}{I.2. Contexte professionnel et entreprise d'accueil}{9}{table.caption.3}%
+\contentsline {subsection}{I.2.1. Présentation de l'entreprise d'accueil}{9}{section*.4}%
+\contentsline {subsection}{I.2.2. Contexte du projet}{9}{section*.4}%
+\contentsline {section}{I.3 Problématique et justification du projet}{10}{section*.4}%
+\contentsline {section}{I.4 Objectifs et périmètre du projet}{10}{section*.4}%
+\contentsline {section}{I.5 Méthodologie et plan de travail}{11}{section*.4}%
+\contentsline {subsection}{I.5.1 Méthodologie de gestion de projet : Scrum}{11}{section*.5}%
+\contentsline {subsection}{I.5.2 Plan de travail et étapes de réalisation}{11}{section*.5}%
 \contentsline {subsection}{I.5.3 Outils de collaboration et environnement technique}{11}{Item.5}%
 \contentsline {chapter}{CHAPITRE II - ANALYSE ET CONCEPTION}{13}{Item.5}%
-\contentsline {section}{II.1 Analyse de l'existant et État de l'Art}{13}{section*.4}%
-\contentsline {subsection}{II.1.1 Évolution des architectures logicielles : Un parcours historique}{14}{figure.0.2}%
+\contentsline {section}{II.1 Analyse de l'existant et État de l'Art}{13}{section*.6}%
+\contentsline {subsection}{II.1.1 Évolution des architectures logicielles : Un parcours historique}{14}{figure.caption.7}%
 \contentsline {subsection}{II.1.2 L'Architecture Monolithique : Analyse du Modèle Traditionnel}{14}{Item.10}%
-\contentsline {subsubsection}{II.1.2.1 Caractéristiques et Modèle de Déploiement}{14}{section*.5}%
-\contentsline {subsubsection}{II.1.2.2 Atouts Techniques et Opérationnels}{15}{section*.5}%
-\contentsline {subsubsection}{II.1.2.3 Limites Structurelles et le phénomène "Big Ball of Mud"}{15}{section*.5}%
-\contentsline {section}{II.2 Fondements Théoriques et Contraintes Distribuées}{16}{section*.5}%
-\contentsline {subsection}{II.2.1 Le Théorème CAP : Le dilemme de la distribution}{16}{section*.6}%
-\contentsline {subsection}{II.2.2 Patterns de Résilience : Prévenir l'effet domino}{16}{section*.6}%
-\contentsline {section}{II.3 Découpage Métier : Le Domain-Driven Design (DDD)}{16}{section*.6}%
-\contentsline {section}{II.4 Modélisation des Microservices et Communications}{17}{section*.6}%
-\contentsline {subsection}{II.4.1 API Gateway et Backend-for-Frontend (BFF)}{17}{section*.7}%
-\contentsline {subsection}{II.4.2 Chorégraphie : La force de l'asynchronisme}{17}{section*.7}%
-\contentsline {section}{II.5 Architecture de Persistance et Base de Données}{18}{figure.0.3}%
-\contentsline {subsection}{II.5.1 Justification des choix technologiques}{19}{section*.8}%
-\contentsline {subsubsection}{II.5.1.1 Justification du choix de PostgreSQL}{19}{table.0.3}%
-\contentsline {subsubsection}{II.5.1.2 Justification du choix de MongoDB}{19}{Item.14}%
-\contentsline {subsubsection}{II.5.1.3 Justification des technologies applicatives et services tiers}{20}{Item.18}%
-\contentsline {subsection}{II.5.2 Gestion des transactions distribuées : Pattern Saga}{20}{Item.21}%
-\contentsline {subsubsection}{Définition formelle}{20}{section*.9}%
-\contentsline {subsubsection}{Les deux approches de Saga}{21}{section*.9}%
-\contentsline {subsubsection}{Exemple concret : Commande de médicament}{21}{section*.9}%
-\contentsline {section}{II.6 Modélisation de la Sécurité : Zero Trust Architecture}{22}{table.0.4}%
-\contentsline {subsection}{II.6.1 Architecture de sécurité en couches}{22}{section*.10}%
-\contentsline {subsection}{II.6.2 Gestion des rôles et permissions}{23}{figure.0.4}%
-\contentsline {section}{II.7 Modélisation des Flux et Cas d'Usage}{23}{figure.0.4}%
-\contentsline {subsection}{II.7.1 Processus métier de commande}{23}{section*.11}%
-\contentsline {chapter}{CHAPITRE III - RÉALISATION}{27}{figure.0.6}%
-\contentsline {section}{III.1 Organisation du Projet et Arborescence}{27}{section*.12}%
-\contentsline {section}{III.2 Environnement Technologique et Outils}{27}{figure.0.8}%
-\contentsline {subsection}{III.1.1 Framework NestJS}{27}{section*.13}%
-\contentsline {subsection}{III.1.2 Communication : RabbitMQ}{28}{section*.13}%
-\contentsline {subsection}{III.1.3 Bases de données et ORM}{28}{section*.13}%
-\contentsline {subsection}{III.2.1 Gestion de la Configuration et des Secrets}{28}{section*.13}%
-\contentsline {section}{III.3 Architecture Interne et Patrons de Conception}{29}{section*.13}%
-\contentsline {subsection}{III.2.1 Organisation en couches}{30}{section*.14}%
-\contentsline {subsection}{III.2.2 Flux de données et DTOs}{30}{Item.37}%
-\contentsline {section}{III.3.3 Tableau Récapitulatif des Microservices}{30}{Item.37}%
-\contentsline {section}{III.4 Développement de l'API Gateway}{31}{table.0.5}%
-\contentsline {subsection}{III.4.1 Architecture et Responsabilités}{31}{section*.15}%
-\contentsline {subsection}{III.4.2 Coordination Inter-services}{31}{section*.15}%
-\contentsline {subsection}{III.4.3 Gestion des Exceptions (RpcExceptionFilter)}{32}{section*.15}%
-\contentsline {subsection}{III.4.4 Contrat d'API : Référence des Endpoints}{33}{section*.15}%
-\contentsline {section}{III.5 Implémentation des Microservices Core}{34}{table.0.6}%
-\contentsline {subsection}{III.5.1 Product Manager : Catalogue et Catégories}{34}{section*.16}%
-\contentsline {subsection}{III.5.2 Inventory Manager : Transactions PostgreSQL}{35}{section*.16}%
-\contentsline {subsection}{III.5.3 File Manager : Stockage S3}{35}{section*.16}%
-\contentsline {subsection}{III.5.4 Order Manager et la Saga de Compensation}{36}{section*.16}%
-\contentsline {subsection}{III.5.5 Payment Manager et Notification Manager}{38}{section*.16}%
-\contentsline {section}{III.6 Sécurisation et Gestion des Accès}{38}{section*.16}%
-\contentsline {subsection}{III.6.1 Stratégie d'Authentification JWT}{38}{section*.17}%
-\contentsline {subsection}{III.6.2 Contrôle d'accès par rôles (RBAC)}{39}{section*.17}%
-\contentsline {subsection}{III.6.3 Propagation de l'identité}{39}{section*.17}%
-\contentsline {section}{III.7 Orchestration et DevOps}{40}{section*.17}%
-\contentsline {subsection}{III.6.1 Construction des images : Multi-stage Building}{40}{section*.18}%
-\contentsline {subsection}{III.6.2 Orchestration : Docker Compose}{41}{section*.18}%
-\contentsline {subsection}{III.6.3 Workflow de développement}{41}{section*.18}%
-\contentsline {section}{III.8 Stratégie de Test et Validation}{42}{section*.18}%
-\contentsline {chapter}{CHAPITRE IV - RÉSULTATS ET ANALYSE}{43}{Item.40}%
-\contentsline {section}{IV.1 Évaluation des performances et de la scalabilité}{43}{section*.19}%
-\contentsline {subsection}{IV.1.1 Temps de réponse et latence}{43}{section*.19}%
-\contentsline {subsection}{IV.1.2 Montée en charge (Scalabilité)}{43}{section*.19}%
-\contentsline {section}{IV.2 Analyse de la qualité logicielle et maintenabilité}{43}{section*.19}%
-\contentsline {subsection}{IV.2.1 Indépendance des déploiements}{43}{section*.20}%
-\contentsline {subsection}{IV.2.2 Clarté du code et isolation des fautes}{44}{section*.20}%
-\contentsline {subsection}{IV.2.3 Mutualisation du code et sécurité du typage}{44}{section*.20}%
-\contentsline {section}{IV.3 Bilan critique et limites de la solution}{44}{section*.20}%
-\contentsline {subsection}{IV.3.1 Complexité opérationnelle}{44}{section*.21}%
-\contentsline {subsection}{IV.3.2 Consistance éventuelle}{44}{section*.21}%
-\contentsline {subsection}{IV.3.3 Robustesse du Broker de messages (SPOF)}{44}{section*.21}%
-\contentsline {section}{IV.4 Validation fonctionnelle via Postman}{45}{Item.44}%
-\contentsline {subsection}{IV.4.1 Test de l'authentification (Sign-in)}{45}{section*.22}%
-\contentsline {subsection}{IV.4.2 Validation de la protection des routes (/auth/me)}{47}{figure.0.9}%
-\contentsline {subsection}{IV.4.3 Consultation du catalogue (Performance et "Impôt de la distribution")}{47}{figure.0.10}%
-\contentsline {subsection}{IV.4.4 Communication asynchrone et événements (RabbitMQ)}{49}{Item.47}%
-\contentsline {subsection}{IV.4.5 Validation des données et robustesse (Shared Library)}{50}{figure.0.13}%
-\contentsline {subsection}{IV.4.6 Gestion des fichiers et stockage S3 (File Service)}{51}{figure.0.14}%
-\contentsline {section}{IV.5 Perspectives d'évolutions et améliorations futures}{53}{figure.0.15}%
-\contentsline {subsection}{IV.5.1 Orchestration avec Kubernetes}{53}{section*.23}%
-\contentsline {subsection}{IV.5.2 Mise en place d'un Service Mesh}{53}{section*.23}%
-\contentsline {subsection}{IV.5.3 CI/CD avancée}{53}{section*.23}%
-\contentsline {subsection}{IV.5.4 Optimisation des temps de réponse (Cache Redis)}{53}{section*.23}%
-\contentsline {subsection}{IV.5.5 Transition vers gRPC pour les communications synchrones}{53}{section*.23}%
-\contentsline {chapter}{CONCLUSION GÉNÉRALE}{55}{section*.23}%
-\contentsline {chapter}{BIBLIOGRAPHIE}{xi}{section*.23}%
-\contentsline {chapter}{WÉBOGRAPHIE}{xii}{Item.51}%
-\contentsline {chapter}{ANNEXES}{xiii}{Item.56}%
-\contentsline {section}{Annexe A — Documentation de l'API REST}{xiii}{section*.24}%
-\contentsline {tocentry}{TABLE DES MATIÈRES}{xvii}{table.Alph0.15}%
+\contentsline {subsubsection}{II.1.2.1 Caractéristiques et Modèle de Déploiement}{15}{section*.8}%
+\contentsline {subsubsection}{II.1.2.2 Atouts Techniques et Opérationnels}{15}{section*.8}%
+\contentsline {subsubsection}{II.1.2.3 Limites Structurelles et le phénomène "Big Ball of Mud"}{15}{section*.8}%
+\contentsline {subsection}{II.1.3 Le framework NestJS : Historique et Structure}{16}{table.caption.9}%
+\contentsline {subsubsection}{Historique et genèse}{16}{section*.10}%
+\contentsline {subsubsection}{Concepts fondamentaux et architecture de NestJS}{17}{section*.10}%
+\contentsline {subsubsection}{Avantages, inconvénients et performances de NestJS}{18}{figure.caption.11}%
+\contentsline {section}{II.2 Fondements Théoriques et Contraintes Distribuées}{19}{figure.caption.11}%
+\contentsline {subsection}{II.2.1 Le Théorème CAP : Le dilemme de la distribution}{19}{section*.12}%
+\contentsline {subsection}{II.2.2 Patterns de Résilience : Prévenir l'effet domino}{19}{section*.12}%
+\contentsline {section}{II.3 Découpage Métier : Le Domain-Driven Design (DDD)}{20}{section*.12}%
+\contentsline {section}{II.4 Modélisation des Microservices et Communications}{20}{section*.12}%
+\contentsline {subsection}{II.4.1 API Gateway et Backend-for-Frontend (BFF)}{20}{section*.13}%
+\contentsline {subsection}{II.4.2 Chorégraphie : La force de l'asynchronisme}{21}{section*.13}%
+\contentsline {subsection}{II.4.3 Modélisation des classes logiques des microservices}{22}{figure.caption.14}%
+\contentsline {section}{II.5 Architecture de Persistance et Base de Données}{23}{figure.caption.15}%
+\contentsline {subsection}{II.5.1 Justification des choix technologiques}{23}{section*.16}%
+\contentsline {subsubsection}{II.5.1.1 Justification du choix de PostgreSQL}{23}{table.caption.17}%
+\contentsline {subsubsection}{II.5.1.2 Justification du choix de MongoDB}{24}{Item.14}%
+\contentsline {subsubsection}{II.5.1.3 Justification des technologies applicatives et services tiers}{24}{Item.18}%
+\contentsline {subsection}{II.5.2 Gestion des transactions distribuées : Pattern Saga}{25}{Item.21}%
+\contentsline {subsubsection}{Définition formelle}{25}{section*.18}%
+\contentsline {subsubsection}{II.5.2.1 Orchestration (Centralisée)}{25}{section*.18}%
+\contentsline {subsubsection}{II.5.2.2 Chorégraphie (Décentralisée)}{25}{section*.18}%
+\contentsline {subsubsection}{Exemple concret : Commande de médicament}{25}{section*.18}%
+\contentsline {subsection}{II.5.3 Traçabilité Distribuée : L'enjeu de l'observabilité}{26}{table.caption.19}%
+\contentsline {section}{II.6 Modélisation de la Sécurité : Zero Trust Architecture}{27}{table.caption.19}%
+\contentsline {subsection}{II.6.1 Architecture de sécurité en couches}{27}{section*.20}%
+\contentsline {subsection}{II.6.2 Gestion des rôles et permissions}{28}{figure.caption.21}%
+\contentsline {section}{II.7 Modélisation des Flux et Cas d'Usage}{29}{figure.caption.21}%
+\contentsline {subsection}{II.7.1 Processus métier de commande}{29}{section*.22}%
+\contentsline {chapter}{CHAPITRE III - RÉALISATION}{33}{figure.caption.24}%
+\contentsline {section}{III.1 Organisation du Projet et Arborescence}{33}{section*.25}%
+\contentsline {section}{III.2 Environnement Technologique et Outils}{33}{figure.caption.26}%
+\contentsline {subsection}{III.1.1 Framework NestJS}{33}{section*.27}%
+\contentsline {subsection}{III.1.2 Communication : RabbitMQ}{34}{section*.27}%
+\contentsline {subsection}{III.1.3 Bases de données et ORM}{34}{section*.27}%
+\contentsline {subsection}{III.2.1 Gestion de la Configuration et des Secrets}{34}{section*.27}%
+\contentsline {section}{III.3 Architecture Interne et Patrons de Conception}{35}{section*.27}%
+\contentsline {subsection}{III.2.1 Organisation en couches}{35}{section*.28}%
+\contentsline {subsection}{III.2.2 Flux de données et DTOs}{36}{Item.37}%
+\contentsline {section}{III.3.3 Tableau Récapitulatif des Microservices}{36}{Item.37}%
+\contentsline {section}{III.4 Développement de l'API Gateway}{36}{table.caption.29}%
+\contentsline {subsection}{III.4.1 Architecture et Responsabilités}{37}{section*.30}%
+\contentsline {subsection}{III.4.2 Coordination Inter-services}{37}{section*.30}%
+\contentsline {subsection}{III.4.3 Gestion des Exceptions (RpcExceptionFilter)}{38}{section*.30}%
+\contentsline {subsection}{III.4.4 Contrat d'API : Référence des Endpoints}{38}{section*.30}%
+\contentsline {section}{III.5 Implémentation des Microservices Core}{40}{table.caption.31}%
+\contentsline {subsection}{III.5.1 Product Manager : Catalogue et Catégories}{40}{section*.32}%
+\contentsline {subsection}{III.5.2 Inventory Manager : Transactions PostgreSQL}{40}{section*.32}%
+\contentsline {subsection}{III.5.3 File Manager : Stockage S3}{41}{section*.32}%
+\contentsline {subsubsection}{III.5.3.1 Optimisation : URL Pré-signée pour l'Upload Direct}{41}{section*.33}%
+\contentsline {subsection}{III.5.4 Order Manager et la Saga de Compensation}{42}{Item.41}%
+\contentsline {subsection}{III.5.5 Payment Manager et Notification Manager}{44}{Item.41}%
+\contentsline {section}{III.6 Sécurisation et Gestion des Accès}{44}{Item.41}%
+\contentsline {subsection}{III.6.1 Stratégie d'Authentification JWT}{44}{section*.34}%
+\contentsline {subsection}{III.6.2 Contrôle d'accès par rôles (RBAC)}{45}{section*.34}%
+\contentsline {subsection}{III.6.3 Propagation de l'identité}{45}{section*.34}%
+\contentsline {section}{III.7 Orchestration et DevOps}{46}{section*.34}%
+\contentsline {subsection}{III.7.1 Construction des images : Multi-stage Building}{46}{section*.35}%
+\contentsline {subsection}{III.7.2 Orchestration : Docker Compose}{47}{section*.35}%
+\contentsline {subsection}{III.7.3 Workflow de développement}{48}{figure.caption.36}%
+\contentsline {section}{III.8 Observabilité et Traçabilité Distribuée}{49}{figure.caption.36}%
+\contentsline {subsection}{III.8.1 Instrumentation via la Shared Library}{49}{section*.37}%
+\contentsline {section}{III.9 Stratégie de Test et Validation}{49}{section*.37}%
+\contentsline {section}{III.10 Visualisation de l'Interface Utilisateur (Frontend)}{50}{Item.44}%
+\contentsline {subsection}{III.10.1 L'Espace Client (Interface de Vente)}{50}{section*.38}%
+\contentsline {subsection}{III.10.2 L'Espace Administrateur (Gestion Officinale)}{51}{figure.caption.40}%
+\contentsline {subsubsection}{III.10.2.1 Tableau de bord et indicateurs de performance}{51}{section*.41}%
+\contentsline {subsubsection}{III.10.2.2 Gestion du catalogue et des inventaires}{52}{figure.caption.42}%
+\contentsline {chapter}{CHAPITRE IV - RÉSULTATS ET ANALYSE}{54}{figure.caption.43}%
+\contentsline {section}{IV.1 Évaluation des performances et de la scalabilité}{54}{section*.44}%
+\contentsline {subsection}{IV.1.1 Temps de réponse et latence}{54}{section*.44}%
+\contentsline {subsection}{IV.1.2 Montée en charge (Scalabilité)}{54}{section*.44}%
+\contentsline {section}{IV.2 Analyse de la qualité logicielle et maintenabilité}{54}{section*.44}%
+\contentsline {subsection}{IV.2.1 Indépendance des déploiements}{54}{section*.45}%
+\contentsline {subsection}{IV.2.2 Clarté du code et isolation des fautes}{55}{section*.45}%
+\contentsline {subsection}{IV.2.3 Mutualisation du code et sécurité du typage}{55}{section*.45}%
+\contentsline {subsection}{IV.2.4 Mesures et Synthèse comparative (Avant / Après)}{55}{section*.45}%
+\contentsline {paragraph}{Note sur les métriques de performance}{55}{section*.45}%
+\contentsline {subsubsection}{IV.2.4.1 Analyse comparative de la performance et limites du système}{55}{section*.46}%
+\contentsline {subsubsection}{IV.2.4.2 Mesure comparative du temps de démarrage}{58}{figure.caption.48}%
+\contentsline {subsubsection}{IV.2.4.3 Analyse comparative de la charge cognitive (LOC)}{59}{figure.caption.50}%
+\contentsline {subsubsection}{IV.2.4.4 Mesure comparative de la complexité cyclomatique}{60}{figure.caption.52}%
+\contentsline {subsubsection}{IV.2.4.5 Traçabilité et Tolérance aux Pannes via Jaeger}{61}{table.caption.53}%
+\contentsline {subsubsection}{IV.2.4.6 Bilan quantitatif global}{61}{figure.caption.54}%
+\contentsline {section}{IV.3 Bilan critique et limites de la solution}{62}{table.caption.55}%
+\contentsline {subsection}{IV.3.1 Complexité opérationnelle}{62}{section*.56}%
+\contentsline {subsection}{IV.3.2 Consistance éventuelle}{62}{section*.56}%
+\contentsline {subsection}{IV.3.3 Robustesse du Broker de messages (SPOF)}{63}{section*.56}%
+\contentsline {section}{IV.4 Validation fonctionnelle via Postman}{63}{Item.53}%
+\contentsline {subsection}{IV.4.1 Test de l'authentification (Sign-in)}{63}{section*.57}%
+\contentsline {subsection}{IV.4.2 Validation de la protection des routes (/auth/me)}{63}{figure.caption.58}%
+\contentsline {subsection}{IV.4.3 Consultation du catalogue (Validation des requêtes synchrones)}{65}{figure.caption.59}%
+\contentsline {subsection}{IV.4.4 Communication asynchrone et événements (RabbitMQ)}{65}{figure.caption.60}%
+\contentsline {subsection}{IV.4.5 Validation des données et robustesse (Shared Library)}{67}{figure.caption.62}%
+\contentsline {subsection}{IV.4.6 Gestion des fichiers et stockage S3 (File Service)}{69}{figure.caption.63}%
+\contentsline {section}{IV.5 Perspectives d'évolutions et améliorations futures}{70}{figure.caption.64}%
+\contentsline {subsection}{IV.5.1 Orchestration avec Kubernetes}{70}{section*.65}%
+\contentsline {subsection}{IV.5.2 Mise en place d'un Service Mesh}{70}{section*.65}%
+\contentsline {subsection}{IV.5.3 CI/CD avancée}{70}{section*.65}%
+\contentsline {subsection}{IV.5.4 Optimisation des temps de réponse (Cache Redis)}{70}{section*.65}%
+\contentsline {subsection}{IV.5.5 Transition vers gRPC pour les communications synchrones}{70}{section*.65}%
+\contentsline {subsection}{IV.5.6 Résilience sous haute charge : Circuit Breaking et Auto-scaling}{70}{section*.65}%
+\contentsline {chapter}{CONCLUSION GÉNÉRALE}{72}{section*.65}%
+\contentsline {chapter}{RÉFÉRENCES BIBLIOGRAPHIQUES}{x}{section*.65}%
+\contentsline {chapter}{WÉBOGRAPHIE}{xi}{Item.68}%
+\contentsline {chapter}{ANNEXES}{xii}{Item.81}%
+\contentsline {section}{Annexe A — Documentation de l'API REST}{xii}{section*.66}%
+\contentsline {tocentry}{TABLE DES MATIÈRES}{xvii}{table.caption.75}%
+\contentsline {chapter}{RÉSUMÉ}{xxi}{etoc@tocid.3}%
+\contentsline {chapter}{ABSTRACT}{xxi}{etoc@tocid.3}%

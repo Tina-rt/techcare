@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('inventory-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { InventoryManagerModule } from './inventory-manager.module';
 import { Transport } from '@nestjs/microservices';

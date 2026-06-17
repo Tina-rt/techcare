@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('order-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { OrderManagerModule } from './order-manager.module';
 import { ValidationPipe } from '@nestjs/common';

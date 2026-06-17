@@ -1,7 +1,0 @@
-\babel@toc {french}{}\relax 
-\contentsline {chapter}{CHAPITRE I - CONTEXTE}{1}{}%
-\contentsline {section}{I.1. Présentation}{1}{}%
-\contentsline {subsection}{I.1.1. Détail A}{1}{}%
-\contentsline {subsection}{I.1.2. Détail B}{1}{}%
-\contentsline {section}{I.2. Contexte}{1}{}%
-\contentsline {subsection}{I.2.1. Info}{1}{}%

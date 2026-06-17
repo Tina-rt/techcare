@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('file-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { FileManagerModule } from './file-manager.module';
 import { Transport } from '@nestjs/microservices';

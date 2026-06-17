@@ -13,7 +13,7 @@ Ce chapitre décrit l'étape de concrétisation technique de l'architecture con�
 \section{III.1 Organisation du Projet et Arborescence}
 Afin de gérer efficacement la multiplicité des microservices, le projet est structuré sous forme de \textbf{Monorepo}. Cette organisation permet de centraliser la configuration globale tout en isolant le code de chaque service.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \begin{minipage}{0.48\textwidth}
 \centering
 \begin{verbatim}
@@ -30,6 +30,7 @@ techcare-root/
 `-- docker-compose.yml
 \end{verbatim}
 \caption{Structure globale (Monorepo)}
+\vspace{0.2cm}\small\textit{Source : Auteur}
 \end{minipage}
 \hfill
 \begin{minipage}{0.48\textwidth}
@@ -47,6 +48,7 @@ src/ (Microservice)
 `-- main.ts
 \end{verbatim}
 \caption{Structure d'un service}
+\vspace{0.2cm}\small\textit{Source : Auteur}
 \end{minipage}
 \end{figure}
 
@@ -173,6 +175,7 @@ Le tableau suivant synthétise l'ensemble des microservices composant la platefo
         \hline
     \end{tabular}
     \caption{Récapitulatif des microservices de la plateforme Techcare}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{tab:microservices_recap}
 \end{table}
 
@@ -264,7 +267,7 @@ Grâce à ce filtre, une exception levée par un microservice (ex: \texttt{throw
 \subsection{III.4.4 Contrat d'API : Référence des Endpoints}
 La Gateway expose un ensemble d'endpoints REST cohérents, organisés par domaine métier. Le tableau ci-dessous présente une synthèse du contrat d'API de Techcare. La documentation complète avec les corps de requêtes et réponses est disponible en Annexe~\ref{annexe:api}.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \begin{tabular}{|l|l|l|c|}
         \hline
@@ -305,6 +308,7 @@ La Gateway expose un ensemble d'endpoints REST cohérents, organisés par domain
         \hline
     \end{tabular}
     \caption{Référence synthétique des endpoints de l'API Gateway Techcare}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{tab:api_endpoints}
 \end{table}
 
@@ -406,6 +410,48 @@ async uploadFile(
   };
 }
 \end{verbatim}
+
+\subsubsection{III.5.3.1 Optimisation : URL Pré-signée pour l'Upload Direct}
+Lors des tests d'intégration, un défi critique a été identifié : le transit des données binaires par la chaîne complète (Navigateur → Gateway → RabbitMQ → File Manager → S3) provoquait des erreurs de timeout pour les fichiers volumineux. La latence cumulée de chaque maillon du système distribué dépassait les délais d'attente configurés sur le broker de messages.
+
+Pour résoudre ce problème de manière architecturalement correcte, nous avons adopté le pattern des \textbf{URL pré-signées} (\textit{Pre-signed URLs}) d'AWS S3. Ce pattern consiste à générer côté serveur une URL temporaire et sécurisée, permettant au client d'uploader un fichier \textbf{directement sur S3}, sans que les données binaires ne transitent par le backend.
+
+\textbf{Nouveau flux d'upload :}
+\begin{enumerate}
+    \item Le client envoie une simple requête \texttt{GET /files/presigned-url} à la Gateway avec le nom et le type MIME du fichier.
+    \item La Gateway transmet la demande au \textit{File Manager} via RabbitMQ. Ce dernier génère une URL signée valable 5 minutes et retourne \texttt{\{uploadUrl, finalUrl\}}.
+    \item Le client upload le fichier \textbf{directement sur S3} via un \texttt{PUT} HTTP, sans passer par le backend.
+    \item Le client envoie ensuite la requête de création du produit avec l'URL finale de l'image (\texttt{finalUrl}).
+\end{enumerate}
+
+\begin{verbatim}
+// file-manager.service.ts
+async generatePresignedUploadUrl(
+  filename: string,
+  mimeType: string,
+  folder: string = 'products',
+): Promise<{ uploadUrl: string; finalUrl: string }> {
+  const key = this.generateFileKey(filename, folder);
+
+  const command = new PutObjectCommand({
+    Bucket: this.awsConfig.getS3Bucket(),
+    Key: key,
+    ContentType: mimeType,
+  });
+
+  // Génération de l'URL signée (expire en 5 minutes)
+  const uploadUrl = await getSignedUrl(this.s3Client, command, {
+    expiresIn: 300,
+  });
+
+  return {
+    uploadUrl,
+    finalUrl: `${this.awsConfig.getCloudfrontUrl()}${key}`,
+  };
+}
+\end{verbatim}
+
+Ce refactoring illustre un avantage fondamental de l'architecture microservices : l'optimisation a été réalisée en modifiant \textbf{uniquement} le \textit{File Manager} et la Gateway, sans impacter aucun autre service. Le \textit{Product Manager}, l'\textit{Inventory Manager} et l'ensemble de l'écosystème restent inchangés.
 
 \subsection{III.5.4 Order Manager et la Saga de Compensation}
 Le service \textbf{Order Manager} est le pivot de la gestion transactionnelle distribu\'ee. Il joue le rôle d'initiateur de la Saga, coordinant les services Inventory et Payment via des \'ev\'enements RabbitMQ.
@@ -572,7 +618,7 @@ async handleGetOrders(
 \section{III.7 Orchestration et DevOps}
 \label{sec:devops}
 
-\subsection{III.6.1 Construction des images : Multi-stage Building}
+\subsection{III.7.1 Construction des images : Multi-stage Building}
 Afin d'optimiser le poids des images de production et la sécurité, nous avons mis en place un \textit{Dockerfile} utilisant le multi-stage building. Cette technique permet de séparer l'environnement de compilation (avec tous les outils de build) de l'environnement d'exécution (contenant uniquement le nécessaire).
 
 \begin{verbatim}
@@ -594,7 +640,7 @@ COPY --from=builder /app/dist/apps/${APP_NAME} ./dist
 CMD ["node", "dist/main"]
 \end{verbatim}
 
-\subsection{III.6.2 Orchestration : Docker Compose}
+\subsection{III.7.2 Orchestration : Docker Compose}
 Un fichier \texttt{docker-compose.yml} centralise la gestion de l'infrastructure et des microservices. Il définit les réseaux isolés et les volumes persistants pour les bases de données.
 
 \begin{verbatim}
@@ -609,15 +655,32 @@ services:
   postgres:
     image: postgres:15-alpine
     volumes: ['postgres_data:/var/lib/postgresql/data']
+    
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports: ['16686:16686', '4318:4318']
   
   # Exemple d'un service applicatif
   gateway:
     build: { context: ., args: { APP_NAME: techcare } }
-    depends_on: [rabbitmq]
+    depends_on: [rabbitmq, jaeger]
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks: [techcare_network]
 \end{verbatim}
 
-\subsection{III.6.3 Workflow de développement}
+Afin d'illustrer la dynamique de cette orchestration, la figure \ref{fig:docker_communication} schématise l'interaction en temps réel entre les différents conteneurs. L'API Gateway agit comme point d'entrée public, transférant les requêtes au réseau interne Docker où les microservices communiquent isolément via le broker RabbitMQ et accèdent à leurs bases de données respectives.
+
+\begin{figure}[H]
+    \centering
+    \input{diagrams/docker_communication.tex}
+    \caption{Visualisation de l'architecture des conteneurs Docker en cours d'exécution}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:docker_communication}
+\end{figure}
+
+
+\subsection{III.7.3 Workflow de développement}
 Pour faciliter le travail quotidien, nous avons configuré un script de lancement unifié utilisant l'outil \texttt{concurrently}. Cela permet de démarrer l'ensemble des 9 services (Gateway + 8 microservices) en une seule commande, tout en conservant les logs colorisés pour chaque domaine.
 
 \begin{verbatim}
@@ -628,9 +691,37 @@ Pour faciliter le travail quotidien, nous avons configuré un script de lancemen
   ... "
 \end{verbatim}
 
-\newpage
 
-\section{III.8 Stratégie de Test et Validation}
+\section{III.8 Observabilité et Traçabilité Distribuée}
+\label{sec:observability}
+
+Pour concrétiser le pattern de traçabilité distribuée défini lors de la conception, nous avons intégré \textbf{Jaeger} et \textbf{OpenTelemetry}. Cette implémentation garantit une visibilité totale sur les requêtes asynchrones transitant par RabbitMQ.
+
+\subsection{III.8.1 Instrumentation via la Shared Library}
+Afin de ne pas dupliquer la configuration du tracing dans chaque microservice, l'initialisation a été centralisée au sein d'un fichier \texttt{tracing.ts} dans la bibliothèque partagée (\texttt{libs/shared}). Ce script configure le SDK OpenTelemetry pour intercepter automatiquement les requêtes HTTP, les requêtes aux bases de données et les échanges RabbitMQ.
+
+\begin{verbatim}
+// libs/shared/src/tracing.ts
+export const initTracing = (serviceName: string) => {
+  const traceExporter = new OTLPTraceExporter({
+    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  });
+
+  const sdk = new NodeSDK({
+    resource: new Resource({
+      [SEMRESATTRS_SERVICE_NAME]: serviceName,
+    }),
+    traceExporter,
+    instrumentations: [getNodeAutoInstrumentations()],
+  });
+
+  sdk.start();
+};
+\end{verbatim}
+
+Chaque microservice invoque cette fonction dans son fichier d'amorçage (\texttt{main.ts}), \textbf{avant} l'instanciation de l'application NestJS, garantissant ainsi que toutes les opérations sont tracées dès le démarrage du conteneur.
+
+\section{III.9 Stratégie de Test et Validation}
 \label{sec:testing}
 
 La validation repose sur trois niveaux :
@@ -639,6 +730,52 @@ La validation repose sur trois niveaux :
     \item \textbf{Tests d'Intégration} : Vérification des communications RabbitMQ
     \item \textbf{Tests E2E} : Simulation de parcours utilisateur complets
 \end{enumerate}
+
+\section{III.10 Visualisation de l'Interface Utilisateur (Frontend)}
+Bien que ce mémoire se concentre sur la refonte du backend vers une architecture microservices, l'interface utilisateur reste le point de contact final. La plateforme Techcare se divise en deux environnements distincts : une interface client pour la vente en ligne et une interface administrateur dédiée à la gestion de l'officine.
+
+\subsection{III.10.1 L'Espace Client (Interface de Vente)}
+L'interface client est optimisée pour une navigation fluide et une expérience d'achat simplifiée. Elle permet aux patients et clients de consulter le catalogue des médicaments disponibles, de constituer un panier et de finaliser leurs commandes en toute sécurité. L'accès est sécurisé via un jeton JWT qui garantit la protection des données personnelles.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/frontend_screenshot/ui_login.png}
+    \caption{Interface de connexion et d'accès sécurisé (Client)}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:ui_login_client}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/frontend_screenshot/ui_catalogue.png}
+    \caption{Interface de catalogue de médicaments (Client)}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:ui_catalogue_client}
+\end{figure}
+
+\subsection{III.10.2 L'Espace Administrateur (Gestion Officinale)}
+L'espace administrateur est l'outil de pilotage quotidien pour le pharmacien. Il regroupe les fonctionnalités critiques de gestion de stock, de suivi des ventes et de configuration de l'application en générale.
+
+\subsubsection{III.10.2.1 Tableau de bord et indicateurs de performance}
+Une fois authentifié, l'administrateur accède à une vue synthétique des activités. Les données (nombre de commandes du jour, alertes de stock critique) sont agrégées dynamiquement via des appels asynchrones à l'API Gateway, démontrant la réactivité de l'architecture distribuée.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/frontend_screenshot/ui_dashboard.png}
+    \caption{Tableau de bord administrateur : Statistiques et pilotage en temps réel}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:ui_dashboard}
+\end{figure}
+
+\subsubsection{III.10.2.2 Gestion du catalogue et des inventaires}
+Cette interface facilite la mise à jour du catalogue de médicaments. Chaque ajout de produit déclenche une orchestration complexe impliquant le service de gestion des fichiers (pour l'upload vers S3) et le microservice de catalogue (pour la persistance NoSQL), le tout de manière transparente pour l'utilisateur.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{diagrams/frontend_screenshot/ui_catalogue_admin.png}
+    \caption{Interface de gestion des produits et mise en ligne du catalogue (Admin)}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:ui_catalogue_admin}
+\end{figure}
 
 \section*{Conclusion partielle}
 Ce troisième chapitre a concrétisé la vision architecturale par une implémentation rigoureuse utilisant des technologies de pointe. L'adoption du stack NestJS, RabbitMQ et Docker a permis de surmonter les défis de communication et de déploiement propres aux systèmes distribués. Les tests validant le bon fonctionnement de l'ensemble, nous disposons désormais d'une plateforme fonctionnelle, agile et prête pour les évolutions futures de Techcare.

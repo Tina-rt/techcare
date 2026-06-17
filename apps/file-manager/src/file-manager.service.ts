@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AwsConfigService } from './config/aws.config';
 import { ConfigService } from '@nestjs/config';
@@ -52,6 +53,7 @@ export class FileManagerService {
       });
 
       const result = await this.s3Client.send(command);
+      console.log('[Upload result]', { ...result, key });
       return {
         key,
         url: `${this.awsConfig.getCloudfrontUrl()}${key}`,
@@ -65,6 +67,32 @@ export class FileManagerService {
       }
       throw new BadRequestException(error.message || 'File upload failed');
     }
+  }
+
+  async generatePresignedUploadUrl(
+    filename: string,
+    mimeType: string,
+    folder: string = 'products',
+    expiresInSeconds: number = 300,
+  ): Promise<{ uploadUrl: string; fileKey: string; finalUrl: string }> {
+    this.validateFileType(mimeType);
+    const key = this.generateFileKey(filename, folder);
+
+    const command = new PutObjectCommand({
+      Bucket: this.awsConfig.getS3Bucket(),
+      Key: key,
+      ContentType: mimeType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Client, command, {
+      expiresIn: expiresInSeconds,
+    });
+
+    return {
+      uploadUrl,
+      fileKey: key,
+      finalUrl: `${this.awsConfig.getCloudfrontUrl()}${key}`,
+    };
   }
 
   async deleteFile(key: string): Promise<void> {

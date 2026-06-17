@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('notification-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { NotificationManagerModule } from './notification-manager.module';
 import { Transport } from '@nestjs/microservices';

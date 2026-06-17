@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('product-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { ProductManagerModule } from './product-manager.module';
 import { ValidationPipe } from '@nestjs/common';

@@ -1,16 +1,30 @@
 \babel@toc {french}{}\relax 
-\contentsline {figure}{\numberline {1}{\ignorespaces Organigramme de l'INSI}}{3}{figure.0.1}%
-\contentsline {figure}{\numberline {2}{\ignorespaces Diagramme de cas d'utilisation du système Techcare}}{13}{figure.0.2}%
-\contentsline {figure}{\numberline {3}{\ignorespaces Diagramme de classe de l'architecture microservices}}{18}{figure.0.3}%
-\contentsline {figure}{\numberline {4}{\ignorespaces Diagramme de séquence de l'authentification utilisateur}}{22}{figure.0.4}%
-\contentsline {figure}{\numberline {5}{\ignorespaces Diagramme d'activité du processus de commande}}{24}{figure.0.5}%
-\contentsline {figure}{\numberline {6}{\ignorespaces Diagramme de séquence du pattern Saga avec compensation}}{25}{figure.0.6}%
-\contentsline {figure}{\numberline {7}{\ignorespaces Structure globale (Monorepo)}}{27}{figure.0.7}%
-\contentsline {figure}{\numberline {8}{\ignorespaces Structure d'un service}}{27}{figure.0.8}%
-\contentsline {figure}{\numberline {9}{\ignorespaces Capture d'écran Postman : Test de réussite de l'authentification}}{46}{figure.0.9}%
-\contentsline {figure}{\numberline {10}{\ignorespaces Capture d'écran Postman : Test de refus d'accès (401 Unauthorized)}}{47}{figure.0.10}%
-\contentsline {figure}{\numberline {11}{\ignorespaces Capture d'écran Postman : Récupération de la liste des produits}}{48}{figure.0.11}%
-\contentsline {figure}{\numberline {12}{\ignorespaces Capture d'écran Postman : Création réussie d'un produit (201 Created)}}{49}{figure.0.12}%
-\contentsline {figure}{\numberline {13}{\ignorespaces Interface RabbitMQ : Pic d'activité sur la file product\_manager\_queue}}{50}{figure.0.13}%
-\contentsline {figure}{\numberline {14}{\ignorespaces Capture d'écran Postman : Rejet d'une requête mal formée (400 Bad Request)}}{51}{figure.0.14}%
-\contentsline {figure}{\numberline {15}{\ignorespaces Interface S3 : Validation de l'upload de l'image du produit}}{52}{figure.0.15}%
+\contentsline {figure}{\numberline {1}{\ignorespaces Organigramme de l'INSI}}{3}{figure.caption.2}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Diagramme de cas d'utilisation du système Techcare}}{13}{figure.caption.7}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Architecture du module NestJS}}{17}{figure.caption.11}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Diagramme d'interaction et de communication des microservices (Chorégraphie)}}{21}{figure.caption.14}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Diagramme de classes global de l'architecture microservices}}{22}{figure.caption.15}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Diagramme de séquence de l'authentification utilisateur}}{28}{figure.caption.21}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Diagramme d'activité du processus de commande}}{30}{figure.caption.23}%
+\contentsline {figure}{\numberline {8}{\ignorespaces Diagramme de séquence du pattern Saga avec compensation}}{31}{figure.caption.24}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Structure globale (Monorepo)}}{33}{figure.caption.26}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Structure d'un service}}{33}{figure.caption.26}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Visualisation de l'architecture des conteneurs Docker en cours d'exécution}}{48}{figure.caption.36}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Interface de connexion et d'accès sécurisé (Client)}}{50}{figure.caption.39}%
+\contentsline {figure}{\numberline {13}{\ignorespaces Interface de catalogue de médicaments (Client)}}{51}{figure.caption.40}%
+\contentsline {figure}{\numberline {14}{\ignorespaces Tableau de bord administrateur : Statistiques et pilotage en temps réel}}{52}{figure.caption.42}%
+\contentsline {figure}{\numberline {15}{\ignorespaces Interface de gestion des produits et mise en ligne du catalogue (Admin)}}{53}{figure.caption.43}%
+\contentsline {figure}{\numberline {16}{\ignorespaces Rapports de performance Artillery : Comparaison du temps de réponse médian}}{57}{figure.caption.47}%
+\contentsline {figure}{\numberline {17}{\ignorespaces Rapports de performance Artillery : Latence de queue sous charge extrême}}{57}{figure.caption.48}%
+\contentsline {figure}{\numberline {18}{\ignorespaces Logs d'exécution : Temps de démarrage avec cache Docker pour le Monolithe (1,280 s). Montre la rapidité de lancement du conteneur unique.}}{58}{figure.caption.49}%
+\contentsline {figure}{\numberline {19}{\ignorespaces Logs d'exécution : Temps de démarrage avec cache Docker pour les Microservices (19,671 s). Illustre le surcoût temporel lié à l'orchestration distribuée.}}{59}{figure.caption.50}%
+\contentsline {figure}{\numberline {20}{\ignorespaces Résultats \texttt {cloc} : Charge cognitive du Monolithe avec une base de code unique (8~087 lignes).}}{60}{figure.caption.51}%
+\contentsline {figure}{\numberline {21}{\ignorespaces Résultats \texttt {cloc} : Charge cognitive réduite pour un service isolé comme le Microservice Produit (716 lignes).}}{60}{figure.caption.52}%
+\contentsline {figure}{\numberline {22}{\ignorespaces Traçabilité d'une défaillance MongoDB via Jaeger : localisation immédiate du composant défaillant}}{61}{figure.caption.54}%
+\contentsline {figure}{\numberline {23}{\ignorespaces Capture d'écran Postman : Test de réussite de l'authentification}}{64}{figure.caption.58}%
+\contentsline {figure}{\numberline {24}{\ignorespaces Capture d'écran Postman : Test de refus d'accès (401 Unauthorized)}}{64}{figure.caption.59}%
+\contentsline {figure}{\numberline {25}{\ignorespaces Capture d'écran Postman : Récupération de la liste des produits}}{65}{figure.caption.60}%
+\contentsline {figure}{\numberline {26}{\ignorespaces Capture d'écran Postman : Création réussie d'un produit (201 Created)}}{66}{figure.caption.61}%
+\contentsline {figure}{\numberline {27}{\ignorespaces Interface RabbitMQ : Pic d'activité sur la file product\_manager\_queue}}{67}{figure.caption.62}%
+\contentsline {figure}{\numberline {28}{\ignorespaces Capture d'écran Postman : Rejet d'une requête mal formée (400 Bad Request)}}{68}{figure.caption.63}%
+\contentsline {figure}{\numberline {29}{\ignorespaces Interface S3 : Validation de l'upload de l'image du produit}}{69}{figure.caption.64}%

@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('user-service');
+
 import { NestFactory } from '@nestjs/core';
 import { UserModule } from './user.module';
 import { Transport } from '@nestjs/microservices';

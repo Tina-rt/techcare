@@ -1,0 +1,121 @@
+\begin{tikzpicture}[
+    node distance=1.0cm and 1.0cm,
+    font=\footnotesize,
+    >=Stealth,
+    participant/.style={draw, fill=blue!10, draw=blue!40, rounded corners=3pt, minimum width=1.6cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    actor/.style={draw, fill=teal!10, draw=teal!40, rounded corners=3pt, minimum width=1.6cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    queue/.style={draw, fill=orange!10, draw=orange!40, rounded corners=3pt, minimum width=1.6cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries}
+]
+
+    % --- PARTICIPANTS ---
+    \node[actor] (Client) at (0,0) {Client};
+    \node[participant] (Gateway) at (2.0,0) {API\\ Gateway};
+    \node[participant] (Product) at (4.0,0) {Product\\ Service};
+    \node[participant] (Inventory) at (6.0,0) {Inventory\\ Service};
+    \node[participant] (Payment) at (8.0,0) {Payment\\ Service};
+    \node[participant] (Notif) at (10.0,0) {Notification\\ Service};
+    \node[queue] (MQ) at (12.2,0) {RabbitMQ\\ (Broker)};
+
+    % --- LIFELINES ---
+    \draw[dashed, gray!50] (Client.south) -- (0,-22.6);
+    \draw[dashed, gray!50] (Gateway.south) -- (2.0,-22.6);
+    \draw[dashed, gray!50] (Product.south) -- (4.0,-22.6);
+    \draw[dashed, gray!50] (Inventory.south) -- (6.0,-22.6);
+    \draw[dashed, gray!50] (Payment.south) -- (8.0,-22.6);
+    \draw[dashed, gray!50] (Notif.south) -- (10.0,-22.6);
+    \draw[dashed, gray!50] (MQ.south) -- (12.2,-22.6);
+
+    % --- ACTIVATIONS ---
+    \draw[fill=teal!20, draw=teal!60] (1.92,-1.2) rectangle (2.08,-5.8);
+    \draw[fill=violet!20, draw=violet!60] (3.92,-3.2) rectangle (4.08,-4.6);
+    
+    % Inventory Phase 2 & Compensation
+    \draw[fill=olive!20, draw=olive!60] (5.92,-7.0) rectangle (6.08,-10.6);
+    \draw[fill=olive!20, draw=olive!60] (5.92,-15.8) rectangle (6.08,-17.2);
+    
+    % Payment
+    \draw[fill=orange!20, draw=orange!60] (7.92,-12.2) rectangle (8.08,-15.1);
+    
+    % Notification Failure & Success
+    \draw[fill=red!20, draw=red!60] (9.92,-17.8) rectangle (10.08,-18.4);
+    \draw[fill=red!20, draw=red!60] (9.92,-20.2) rectangle (10.08,-22.2);
+
+    % =========================================================================
+    % PHASE 1 : VALIDATION DU PRODUIT
+    % =========================================================================
+    \node[fill=blue!5, text=blue!80!black, font=\scriptsize\bfseries, minimum width=12.2cm, align=center, inner sep=3pt] at (6.1, -0.6) {Phase 1 : Validation du produit};
+
+    \draw[->, thick] (0,-1.2) -- node[above, font=\scriptsize] {POST /orders \{productId, quantity\}} (1.92,-1.2);
+    
+    \draw[->, thick] (2.08,-1.8) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {Vérifier JWT} ++(0,-0.4) -- (2.08,-2.2);
+    
+    \draw[->, thick] (2.08,-2.7) -- node[above, font=\scriptsize, near start] {publish(validate\_product)} (12.2,-2.7);
+    \draw[->, thick] (12.2,-3.2) -- node[above, font=\scriptsize, near start] {consume(validate\_product)} (4.08,-3.2);
+    
+    \draw[->, thick] (4.08,-3.7) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {checkAvailability()} ++(0,-0.4) -- (4.08,-4.1);
+    
+    \draw[->, thick] (4.08,-4.6) -- node[above, font=\scriptsize, near end] {publish(product\_validated)} (12.2,-4.6);
+    \draw[->, dashed, thick] (12.2,-5.2) -- node[above, font=\scriptsize, near start] {product\_validated event} (2.08,-5.2);
+    \draw[->, dashed, thick] (1.92,-5.8) -- node[above, font=\scriptsize] {202 Accepted \{orderId, status: "processing"\}} (0,-5.8);
+
+    % =========================================================================
+    % PHASE 2 : RÉSERVATION DU STOCK
+    % =========================================================================
+    \node[fill=blue!5, text=blue!80!black, font=\scriptsize\bfseries, minimum width=12.2cm, align=center, inner sep=3pt] at (6.1, -6.4) {Phase 2 : Réservation du stock};
+
+    \draw[->, thick] (12.2,-7.0) -- node[above, font=\scriptsize, near start] {consume(product\_validated)} (6.08,-7.0);
+    
+    \draw[->, thick] (6.08,-7.5) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {reserveStock()} ++(0,-0.4) -- (6.08,-7.9);
+
+    % Box Alt : Stock disponible / insuffisant
+    \draw[draw=gray!40, fill=gray!2, fill opacity=0.3, rounded corners=2pt] (-0.3,-8.2) rectangle (12.5,-11.0);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-8.2) {alt : Stock disponible};
+    
+    \draw[->, thick] (6.08,-8.7) -- node[above, font=\scriptsize, near end] {publish(stock\_reserved)} (12.2,-8.7);
+    
+    \draw[dashed, gray!40] (-0.3,-9.2) -- (12.5,-9.2);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-9.2) {else : Stock insuffisant};
+    
+    \draw[->, thick] (6.08,-9.7) -- node[above, font=\scriptsize, near end] {publish(stock\_unavailable)} (12.2,-9.7);
+    \draw[->, thick] (6.08,-10.3) -- node[above, font=\scriptsize] {Notification échec} (9.92,-10.3);
+
+    % =========================================================================
+    % PHASE 3 : TRAITEMENT DU PAIEMENT
+    % =========================================================================
+    \node[fill=blue!5, text=blue!80!black, font=\scriptsize\bfseries, minimum width=12.2cm, align=center, inner sep=3pt] at (6.1, -11.6) {Phase 3 : Traitement du paiement};
+
+    \draw[->, thick] (12.2,-12.2) -- node[above, font=\scriptsize, near start] {consume(stock\_reserved)} (8.08,-12.2);
+    
+    \draw[->, thick] (8.08,-12.7) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {processPayment()} ++(0,-0.4) -- (8.08,-13.1);
+
+    % Box Alt : Paiement réussi / échoué
+    \draw[draw=gray!40, fill=gray!2, fill opacity=0.3, rounded corners=2pt] (-0.3,-13.4) rectangle (12.5,-19.0);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-13.4) {alt : Paiement réussi};
+    
+    \draw[->, thick] (8.08,-13.9) -- node[above, font=\scriptsize, near end] {publish(payment\_completed)} (12.2,-13.9);
+    
+    \draw[dashed, gray!40] (-0.3,-14.4) -- (12.5,-14.4);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-14.4) {else : Paiement échoué};
+    
+    \draw[->, thick] (8.08,-14.9) -- node[above, font=\scriptsize, near end] {publish(payment\_failed)} (12.2,-14.9);
+    
+    % Compensation : Libération du stock
+    \draw[->, thick] (12.2,-15.8) -- node[above, font=\scriptsize, near start] {consume(payment\_failed)} (6.08,-15.8);
+    \draw[->, thick] (6.08,-16.3) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {releaseStock()} ++(0,-0.4) -- (6.08,-16.7);
+    \draw[->, thick] (6.08,-17.2) -- node[above, font=\scriptsize, near end] {publish(stock\_released)} (12.2,-17.2);
+    
+    \draw[->, thick] (12.2,-17.8) -- node[above, font=\scriptsize, near start] {consume(payment\_failed)} (9.92,-17.8);
+    \draw[->, thick] (9.92,-18.4) -- node[above, font=\scriptsize] {Email échec} (0,-18.4);
+
+    % =========================================================================
+    % PHASE 4 : CONFIRMATION FINALE
+    % =========================================================================
+    \node[fill=blue!5, text=blue!80!black, font=\scriptsize\bfseries, minimum width=12.2cm, align=center, inner sep=3pt] at (6.1, -19.6) {Phase 4 : Confirmation finale};
+
+    \draw[->, thick] (12.2,-20.2) -- node[above, font=\scriptsize, near start] {consume(payment\_completed)} (9.92,-20.2);
+    \draw[->, thick] (9.92,-20.8) -- node[above, font=\scriptsize] {Email confirmation} (0,-20.8);
+    
+    \draw[->, thick] (10.08,-21.3) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {sendWebSocketNotification()} ++(0,-0.4) -- (10.08,-21.7);
+    \draw[->, dashed, thick] (9.92,-22.2) -- node[above, font=\scriptsize] {WebSocket: order\_confirmed} (0,-22.2);
+
+\end{tikzpicture}

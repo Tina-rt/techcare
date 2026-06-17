@@ -1,96 +1,30 @@
-\newpage
 
     \begin{center}
         \textbf{\large RESUME}\label{page:resume}
     \end{center}
     \addcontentsline{toc}{chapter}{RÉSUMÉ}
-    Ce mémoire présente les travaux réalisés dans le cadre d'un stage de fin d'études au sein d'une entreprise spécialisée dans le commerce de produit paramédicaux, 
-    concernant la modernisation d'une plateforme e-commerce basée sur une architecture monolithique traditionnelle. 
-    Face aux diverses limitations en termes de scalabilité, maintenabilité et agilité de développement, 
-    ce projet a pour objectif la conception et l'implémentation d'une architecture microservices moderne.
+    
+    Ce mémoire détaille la restructuration de la plateforme e-commerce pharmaceutique Techcare, passant d'une architecture monolithique (fortement couplée et difficile à maintenir) vers une architecture microservices. En s'appuyant sur les principes du \textbf{Domain-Driven Design (DDD)}, le système a été décomposé en domaines autonomes (Catalogue, Inventaire, Commandes, Utilisateurs) orchestrés par une \textbf{API Gateway}. La solution technique exploite \textbf{NestJS}, une persistance polyglotte (\textbf{PostgreSQL} et \textbf{MongoDB}), et la conteneurisation \textbf{Docker}. Pour pallier l'absence de transactions globales, le modèle asynchrone \textbf{Saga} via \textbf{RabbitMQ} a été implémenté.
+    
+    Les résultats obtenus, mesurés empiriquement, démontrent une amélioration drastique de la maintenabilité : réduction de 91\% de la charge cognitive (lignes de code par dépôt) et baisse significative de la complexité cyclomatique moyenne. L'intégration de \textbf{Jaeger} (OpenTelemetry) prouve l'excellente isolation des pannes. Bien que cette distribution introduise un léger surcoût sur la latence réseau et le temps de démarrage (l'\textit{impôt de la distribution}), la plateforme gagne en agilité de développement, en résilience (dégradation gracieuse) et est prête pour une scalabilité horizontale ciblée.
 
     \vspace{0.3cm}
 
-    La méthodologie de migration progressive selon le \textbf{Strangler Fig Pattern} a été choisie,
-    permettant une transition en douceur sans interruption de service. 
-    L'architecture cible repose sur une décomposition en cinq services principaux: 
-    \textbf{User Service} pour l'authentification et la gestion des utilisateurs, 
-    \textbf{Product Service} pour la gestion des produits et de l'inventaire, 
-    \textbf{Order Service} pour le processus de commande, 
-    \textbf{Payment Service} pour les transactions sécurisées, et 
-    \textbf{Notification Service} pour la gestion des notifications.
-
-    \vspace{0.3cm}
-
-    Sur le plan technique, la solution implémente une stack moderne incluant 
-    \textbf{NestJS} pour les microservices backend, 
-    avec differentes base de données adaptées à chaque service (\textbf{MongoDB} pour le service produits et \textbf{PostgreSQL} pour les autres), 
-    L'\textbf{API Gateway} centralise l'authentification JWT, le routage et le rate limiting, tandis que \textbf{Docker} et \textbf{Kubernetes} assurent la containerisation et l'orchestration. 
-    La communication inter-services utilise à la fois le synchronisme HTTP/REST et l'asynchronisme via \textbf{RabbitMQ}.
-
-    \vspace{0.3cm}
-
-    Les résultats de la migration démontrent une amélioration significative des performances 
-    avec un temps de réponse moyen réduit de 45\%, 
-    une capacité de montée en charge multipliée par 10, 
-    et une réduction de 60\% du temps de déploiement. 
-    La scalabilité horizontale permet désormais de faire évoluer indépendamment chaque 
-    service selon la charge, tandis que la maintenabilité est grandement améliorée grâce au 
-    découplage des fonctionnalités.
-
-    \vspace{0.3cm}
-
-    Ce projet valide l'intérêt des architectures microservices pour les plateformes e-commerce soumises à une croissance rapide et à des exigences élevées de disponibilité. Il fournit également un cadre méthodologique et des bonnes pratiques pour la migration progressive d'applications monolithiques, contribuant ainsi à la littérature technique sur les transformations architecturales.
+    \textbf{\underline{Mots-clés}}: Architecture Microservices, Domain-Driven Design, NestJS, Docker, RabbitMQ, API Gateway, Saga Pattern, Observabilité
+    
     \vspace{0.5cm}
-
-    \textbf{\underline{Mots-clés}}: Architecture Microservices, Migration, E-commerce, NestJS, Docker, Kubernetes, Scalabilité, Strangler Fig Pattern, API Gateway, MongoDB, PostgreSQL
-    
-    
-    \newpage
-    \thispagestyle{normalpage}
+    \noindent\rule{\textwidth}{0.4pt}
+    \vspace{0.5cm}
 
     \begin{center}
         {\large\bfseries ABSTRACT}
     \end{center}
     \addcontentsline{toc}{chapter}{ABSTRACT}\label{page:abstract}
 
-    This thesis presents the work carried out as part of a final-year internship within a company specialized in the trade of paramedical products, 
-    focusing on the modernization of an e-commerce platform based on a traditional monolithic architecture. 
-    Faced with various limitations in terms of scalability, maintainability, and development agility, 
-    this project aims to design and implement a modern microservices architecture.
+    This thesis details the architectural restructuring of the Techcare pharmaceutical e-commerce platform, transitioning from a tightly coupled monolithic architecture to a modern microservices approach. Guided by \textbf{Domain-Driven Design (DDD)} principles, the system was decoupled into autonomous domains (Catalog, Inventory, Orders, Users) routed through an \textbf{API Gateway}. The technical implementation utilizes \textbf{NestJS}, polyglot persistence (\textbf{PostgreSQL} and \textbf{MongoDB}), and \textbf{Docker} containerization. To address distributed data consistency, the asynchronous \textbf{Saga} pattern via \textbf{RabbitMQ} was implemented.
+    
+    The empirical results demonstrate a drastic improvement in software maintainability: a 91\% reduction in cognitive load (lines of code per repository) and a significant drop in average cyclomatic complexity. The integration of \textbf{Jaeger} (OpenTelemetry) validates the system's robust fault isolation capabilities. Although this distributed nature introduces a slight overhead in network latency and startup time (the \textit{distributed tax}), the platform achieves superior development agility, high resilience through graceful degradation, and is fully equipped for targeted horizontal scalability.
 
     \vspace{0.3cm}
 
-    The progressive migration methodology following the \textbf{Strangler Fig Pattern} was chosen,
-    allowing a smooth transition without service interruption. 
-    The target architecture is decomposed into five main services: 
-    \textbf{User Service} for authentication and user management, 
-    \textbf{Product Service} for product and inventory management, 
-    \textbf{Order Service} for order processing, 
-    \textbf{Payment Service} for secure transactions, and 
-    \textbf{Notification Service} for notification management.
-
-    \vspace{0.3cm}
-
-    From a technical perspective, the solution implements a modern stack including 
-    \textbf{NestJS} for backend microservices, 
-    with different databases adapted to each service (\textbf{MongoDB} for the product service and \textbf{PostgreSQL} for the others). 
-    The \textbf{API Gateway} centralizes JWT authentication, routing, and rate limiting, while \textbf{Docker} and \textbf{Kubernetes} ensure containerization and orchestration. 
-    Inter-service communication relies on both synchronous HTTP/REST and asynchronous messaging via \textbf{RabbitMQ}.
-
-    \vspace{0.3cm}
-
-    The migration results show a significant improvement in performance, with an average response time reduced by 45\%, 
-    a 10x increase in load-handling capacity, and a 60\% reduction in deployment time. 
-    Horizontal scalability now allows each service to evolve independently according to the load, 
-    while maintainability is greatly enhanced thanks to the decoupling of functionalities.
-
-    \vspace{0.3cm}
-
-    This project validates the relevance of microservices architectures for e-commerce platforms facing rapid growth and high availability requirements. 
-    It also provides a methodological framework and best practices for the progressive migration of monolithic applications, 
-    thus contributing to the technical literature on architectural transformations.
-
-    \vspace{0.5cm}
-
-    \textbf{\underline{Keywords}}: Microservices Architecture, Migration, E-commerce, NestJS, Docker, Kubernetes, Scalability, Strangler Fig Pattern, API Gateway, MongoDB, PostgreSQL
+    \textbf{\underline{Keywords}}: Microservices Architecture, Domain-Driven Design, NestJS, Docker, RabbitMQ, API Gateway, Saga Pattern, Observability

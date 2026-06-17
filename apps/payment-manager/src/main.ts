@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('payment-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { PaymentManagerModule } from './payment-manager.module';
 import { ValidationPipe } from '@nestjs/common';

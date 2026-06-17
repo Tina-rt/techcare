@@ -123,8 +123,14 @@ export class CartService {
     let totalItems = 0;
 
     const processedItems = items.map((item) => {
-      const product = products.find((p) => String(p._id) === String(item.productId));
-      const isOutOfStock = !product || (product.quantity !== undefined ? product.quantity : (product as any).stock) <= 0;
+      const product = products.find(
+        (p) => String(p._id) === String(item.productId),
+      );
+      const isOutOfStock =
+        !product ||
+        (product.quantity !== undefined
+          ? product.quantity
+          : (product as any).stock) <= 0;
 
       if (!isOutOfStock) {
         const basePrice = item.price ?? product?.price ?? 0;

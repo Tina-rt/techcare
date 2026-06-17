@@ -12,10 +12,11 @@ Ce chapitre expose la réflexion conceptuelle menée pour répondre aux exigence
 \section{II.1 Analyse de l'existant et État de l'Art}
 \label{sec:analyse_art}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{diagrams/use_case/use_case.png}
+    \includegraphics[width=\textwidth]{diagrams/use_case/use_case.png}
     \caption{Diagramme de cas d'utilisation du système Techcare}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{fig:use_case}
 \end{figure}
 
@@ -66,11 +67,93 @@ Avant d'atteindre ses limites, le monolithe offre des avantages indéniables :
 \subsubsection{II.1.2.3 Limites Structurelles et le phénomène "Big Ball of Mud"}
 Pour Techcare, le monolithe a fini par dériver vers ce que Brian Foote et Joseph Yoder appellent une **"Big Ball of Mud"** (grosse boule de boue) : une architecture sans structure apparente où le couplage devient si dense que toute modification devient imprévisible.
 \begin{itemize}
-    \item \textbf{Lourdeur du Continuous Deployment (CD)} : Le temps de build augmente de manière exponentielle avec la taille du projet. Pour Techcare, déployer un correctif mineur prenait plus de 30 minutes, incluant l'exécution de milliers de tests sans rapport avec le changement.
+    \item \textbf{Lourdeur du Continuous Deployment (CD) et complexité du débogage} : Le temps de build n'est pas vraiment le problème majeur, le débogage oui. Avec la complexité croissante du code monolithique, identifier la source d'une régression lors d'un déploiement nécessitait de parcourir une base de code dense et fortement couplée, allongeant considérablement le temps de résolution des incidents.
     \item \textbf{Scalabilité Inefficace} : La scalabilité est obligatoirement "homogène". Pour absorber un pic de trafic sur la recherche de médicaments, nous devions dupliquer l'intégralité du socle (incluant les modules lourds et inutilisés en lecture seule), entraînant un surcoût d'infrastructure inutile.
     \item \textbf{Obsolescence Technologique Subie} : Le système est "prisonnier" de ses choix initiaux. Passer d'une version majeure de framework ou changer de langage est une mission quasi-impossible car elle impacterait des millions de lignes de code interdépendantes.
 \end{itemize}
 
+\textbf{Bilan comparatif :}
+Pour synthétiser cette transition architecturale, le tableau \ref{tab:monolith_vs_microservices} met en évidence les différences fondamentales justifiant le passage aux microservices pour la plateforme Techcare.
+
+\begin{table}[htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|p{3.5cm}|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Critère} & \textbf{Ancien Monolithe} & \textbf{Nouvelle Architecture (Microservices)} \\
+        \hline
+        \textbf{Déploiement} & Lourd et risqué. Un seul artefact englobant tout. & Agile et indépendant par service (conteneurs isolés). \\
+        \hline
+        \textbf{Scalabilité} & Homogène. Duplication totale de l'application (lourdeur matérielle). & Ciblée. Seuls les services sollicités sont dupliqués. \\
+        \hline
+        \textbf{Tolérance aux pannes} & Point de défaillance unique (SPOF). Tout le système tombe en cas de crash. & Haute résilience. L'échec d'un service n'impacte pas le reste. \\
+        \hline
+        \textbf{Persistance} & Base de données unique et centralisée (couplage fort). & Base de données par service (Persistance Polyglotte). \\
+        \hline
+        \textbf{Stack technologique} & Unique et figé (Risque d'obsolescence). & Hétérogène (Le bon outil pour la bonne tâche). \\
+        \hline
+    \end{tabular}
+    \caption{Comparaison entre l'architecture monolithique et microservices}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{tab:monolith_vs_microservices}
+\end{table}
+
+\subsection{II.1.3 Le framework NestJS : Historique et Structure}
+Face aux limites de l'architecture monolithique, la mise en œuvre de microservices modernes requiert des outils robustes. C'est dans ce contexte que s'inscrit NestJS.
+
+\subsubsection{Historique et genèse}
+Créé en 2017 par Kamil Myśliwiec, NestJS (souvent appelé simplement Nest) est un framework pour la création d'applications Node.js côté serveur. Historiquement, l'écosystème Node.js était dominé par des bibliothèques minimalistes comme Express.js ou Koa. Bien que ces outils offrent une grande flexibilité, ils n'imposent aucune structure architecturale. Cela conduit fréquemment à du code non structuré (spaghetti code) dans les projets d'envergure. NestJS a été conçu pour résoudre ce problème architectural en s'inspirant fortement des concepts d'Angular.
+
+\subsubsection{Concepts fondamentaux et architecture de NestJS}
+NestJS utilise nativement TypeScript (bien qu'il supporte JavaScript pur) et combine des éléments de Programmation Orientée Objet (POO), de Programmation Fonctionnelle (FP) et de Programmation Réactive Fonctionnelle (FRP). 
+
+
+L'architecture de NestJS s'articule autour de plusieurs notions clés qu'il est indispensable de maîtriser :
+
+\begin{itemize}
+    \item \textbf{Le CLI (Command Line Interface)} : L'outil \texttt{NestCLI} est essentiel pour l'initialisation et le développement. Il permet de générer rapidement des projets, de scaffolder des éléments (modules, contrôleurs, services) tout en respectant scrupuleusement les conventions de nommage et de structure du framework.
+    
+    \item \textbf{Modules} : Un module est une classe annotée avec le décorateur \texttt{@Module()}. Il permet d'encapsuler logiquement un domaine métier (par exemple, un \texttt{UsersModule} ou \texttt{ProductsModule}) en regroupant ses contrôleurs et ses providers. Chaque application possède un module racine. Cette approche encourage fortement la séparation des préoccupations, idéale pour concevoir des microservices indépendants.
+    \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagrams/modules_nestjs.png}
+    \caption{Architecture du module NestJS}
+    \vspace{0.2cm}\small\textit{Source : nestjs.com}
+    \label{fig:modules_nestjs}
+\end{figure}
+    \item \textbf{Contrôleurs (Controllers)} : Annotés par \texttt{@Controller()}, ils constituent la couche de présentation. Leur unique responsabilité est de réceptionner les requêtes entrantes, d'extraire les paramètres (via des décorateurs comme \texttt{@Body()}, \texttt{@Param()}) et de déléguer la logique métier aux services. Dans un contexte microservices, ils gèrent aussi le trafic asynchrone (RabbitMQ, TCP) via \texttt{@MessagePattern}.
+    
+    \item \textbf{Services et Providers} : Les services sont les porteurs de la logique métier (Business Logic) et de l'accès aux bases de données. Dans NestJS, presque toute classe utilitaire (services, repositories, factories) est considérée comme un "Provider" (annotée via \texttt{@Injectable()}).
+    
+    \item \textbf{L'Injection de Dépendances (Dependency Injection - DI)} : C'est le cœur du système NestJS. Au lieu d'instancier manuellement une classe (via le mot-clé \texttt{new}), NestJS gère un conteneur IoC (Inversion of Control) qui injecte automatiquement les instances nécessaires (les Providers) dans les classes qui en ont besoin (comme les Contrôleurs). Cela garantit un code lâchement couplé, hautement modulaire et facilement testable.
+\end{itemize}
+
+Grâce à cette structure rigoureuse et standardisée, NestJS s'impose comme une référence incontournable pour la construction d'architectures distribuées complexes.
+
+\subsubsection{Avantages, inconvénients et performances de NestJS}
+
+L'adoption de NestJS pour Techcare repose sur un compromis technique équilibré. Il convient d'en évaluer les bénéfices et les limites.
+
+\textbf{Les Avantages majeurs :}
+\begin{itemize}
+    \item \textbf{Maintenabilité et scalabilité d'équipe} : L'architecture fortement opinionnée oblige tous les développeurs à suivre la même structure, ce qui simplifie l'intégration de nouveaux membres et la revue de code.
+    \item \textbf{Testabilité} : L'injection de dépendances (DI) permet de créer facilement des \textit{Mocks} et des \textit{Stubs} pour isoler les composants lors des tests unitaires.
+    \item \textbf{Agnosticisme du protocole} : NestJS s'adapte naturellement aux microservices en masquant la complexité des protocoles (HTTP, WebSockets, RabbitMQ, gRPC) derrière une API uniforme.
+\end{itemize}
+
+\textbf{Les Inconvénients :}
+\begin{itemize}
+    \item \textbf{Courbe d'apprentissage abrupte} : Contrairement à Express.js qui s'apprend en quelques heures, NestJS nécessite une maîtrise de TypeScript, des décorateurs, de l'Inversion de Contrôle (IoC) et de RxJS.
+    \item \textbf{Surcharge (Overhead) initiale} : Le framework embarque beaucoup de bibliothèques par défaut, générant une empreinte mémoire légèrement supérieure et un temps de démarrage plus long (Cold Start), ce qui peut être un frein dans des architectures Serverless (FaaS).
+\end{itemize}
+
+\textbf{Analyse des performances (Benchmark) :}
+En termes de performances brutes, NestJS ajoute une légère couche d'abstraction (overhead) s'il s'exécute sur le moteur par défaut (Express.js). Un benchmark classique de requêtes simples ("Hello World") montre que :
+\begin{itemize}
+    \item \textbf{Express.js (natif)} : \(\sim\) 15 000 requêtes par seconde.
+    \item \textbf{NestJS (sous Express)} : \(\sim\) 12 000 requêtes par seconde (en raison de l'interception et de l'injection de dépendances).
+\end{itemize}
+Toutefois, NestJS pallie cet écart en permettant de basculer son moteur sous-jacent sur \textbf{Fastify}. Lorsqu'il est configuré avec Fastify, NestJS atteint jusqu'à \textbf{30 000 requêtes par seconde}, dépassant largement Express.js tout en conservant son architecture robuste. Pour Techcare, cette modularité garantit que l'architecture logicielle ne deviendra pas un goulot d'étranglement lors de la montée en charge.
 
 \section{II.2 Fondements Théoriques et Contraintes Distribuées}
 \label{sec:theorie}
@@ -86,7 +169,7 @@ Formulé par Eric Brewer, le théorème CAP stipule que pour un système informa
 Pour Techcare, notre choix s'est porté sur une architecture **AP (Availability and Partition Tolerance)**. Dans un contexte pharmaceutique, il est préférable qu'un client puisse consulter le catalogue de médicaments (quitte à voir un stock légèrement désynchronisé de quelques secondes) plutôt que de se confronter à une erreur 500 bloquante. Nous adoptons donc le modèle de \textbf{Consistance Éventuelle} (\textit{Eventual Consistency}), où les données se propagent de manière asynchrone via RabbitMQ.
 
 \subsection{II.2.2 Patterns de Résilience : Prévenir l'effet domino}
-L'architecture distribuée multiplie les points de défaillance réseau. Pour éviter qu'une panne isolée ne paralyse tout le système, nous avons implémenté :
+L'architecture distribuée multiplie les points de défaillance réseau. Afin de prévenir la propagation des pannes (effet domino), notre phase de conception théorique intègre plusieurs patrons d'architecture (patterns) majeurs de l'état de l'art, dont l'implémentation effective en production constitue un axe d'amélioration clé pour la plateforme :
 \begin{itemize}
     \item \textbf{Circuit Breaker (Disjoncteur)} : Ce pattern surveille les échecs d'un service distant. S'ils dépassent un seuil, le disjoncteur "s'ouvre" et redirige immédiatement les appels vers un mode dégradé (ex: cache ou message d'erreur rapide), évitant ainsi d'épuiser les ressources du client en attendant un timeout.
     \item \textbf{Retry Pattern} : Pour les erreurs transitoires (micro-coupures réseau), le système réessaye automatiquement la requête avec une stratégie d'\textit{Exponential Backoff} pour ne pas saturer le service cible.
@@ -98,8 +181,9 @@ L'architecture distribuée multiplie les points de défaillance réseau. Pour é
 
 Le Domain-Driven Design est au cœur de notre stratégie de décomposition. Il permet de s'assurer que le code reflète fidèlement la complexité métier.
 \begin{itemize}
-    \item \textbf{Bounded Contexts (Contextes Délimités)} : C'est la pierre angulaire de notre architecture. Au lieu d'avoir un modèle "Produit" géant, nous avons fragmenté ce concept. Dans le \textit{Catalog Context}, le produit est défini par son marketing (images, description). Dans l'\textit{Inventory Context}, il est défini par sa logistique (code-barres, emplacement, seuil d'alerte).
-    \item \textbf{Ubiquitous Language (Langage Commun)} : Nous avons banni le jargon technique pur pour utiliser les termes des pharmaciens (ex: "Posologie", "Rupture de stock", "Délivrance") directement dans le nommage des classes et des méthodes.
+    \item \textbf{Bounded Contexts (Contextes Délimités)} : C'est la pierre angulaire de notre architecture. Au lieu d'avoir un modèle "Produit" géant, nous avons fragmenté ce concept. Dans le \textit{Product Manager},
+     le produit est défini par son marketing (images, description). Dans l'\textit{Inventory Manager}, il est défini par sa logistique (code-barres, emplacement, seuil d'alerte).
+    \item \textbf{Ubiquitous Language (Langage Commun)} : Nous avons structuré le code pour refléter fidèlement les notions de gestion d'officine (ex: l'événement \texttt{stock\_unavailable} pour la rupture de stock, et les types précis de mouvements de stock \texttt{RESERVATION} et \texttt{RELEASE} dans l'inventaire) plutôt que de simples opérations génériques d'incrémentation.
     \item \textbf{Aggregate Roots} : Chaque microservice gère une entité racine (ex: l'Ordre dans le service Commande) qui garantit l'intégrité de ses composants internes.
 \end{itemize}
 
@@ -127,8 +211,24 @@ Pour la communication entre services, nous avons exclu l'orchestration centralis
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{diagrams/class/class_architecture.png}
-    \caption{Diagramme de classe de l'architecture microservices}
+    \includegraphics[width=\textwidth]{diagrams/class/interaction.png}
+    \caption{Diagramme d'interaction et de communication des microservices (Chorégraphie)}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
+    \label{fig:service_communication}
+\end{figure}
+
+L'analyse de ces flux d'interaction met en évidence le rôle central du Message Broker (RabbitMQ) dans la synchronisation des états et l'indépendance de la persistance (PostgreSQL et MongoDB).
+
+\subsection{II.4.3 Modélisation des classes logiques des microservices}
+Chaque microservice, bien qu'isolé dans son propre conteneur, adopte une architecture logicielle interne structurée et uniforme (Controller, Service, Entity). Le diagramme de classes global illustré par la figure \ref{fig:class_architecture} présente cette organisation structurelle. 
+Pour des raisons de lisibilité et de clarté, les attributs et méthodes détaillés de chaque classe ne sont pas représentés afin de se concentrer sur l'architecture générale, l'organisation en packages et les relations entre composants logiques.
+
+
+\begin{figure}[H]
+    \centering
+    \input{diagrams/class/class_architecture.tex}
+    \caption{Diagramme de classes global de l'architecture microservices}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{fig:class_architecture}
 \end{figure}
 
@@ -153,7 +253,7 @@ Le choix de la \textbf{Persistance Polyglotte} répond au besoin de performance 
 
 Le tableau suivant synthétise les critères de sélection des bases de données :
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
         \hline
@@ -169,6 +269,7 @@ Le tableau suivant synthétise les critères de sélection des bases de données
         \hline
     \end{tabular}
     \caption{Comparaison des systèmes de persistance retenus}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{tab:db_comparison}
 \end{table}
 
@@ -214,15 +315,15 @@ Bien que la persistance polyglotte offre une flexibilité maximale, elle impose 
 Le choix des outils de développement et des services externes a été guidé par des impératifs d'architecture distribuée et de sécurité de l'information.
 
 \begin{enumerate}[label=\alph*)]
-    \item \textbf{NestJS pour l'architecture modulaire} : Choisi pour son injection de dépendances et son support natif des microservices. Il impose une rigueur indispensable à la maintenabilité du système.
+    \item \textbf{Le framework NestJS} : Comme détaillé précédemment dans l'état de l'art (Section II.1.3), NestJS s'est imposé naturellement pour structurer l'ensemble de nos microservices grâce à son architecture fortement modulaire, son typage strict (TypeScript) et son intégration native des flux asynchrones.
 
-    \item \textbf{Stockage Objet (AWS S3) pour la scalabilité} : Centralisation des médias pour garantir des services \textit{stateless}, facilitant ainsi la montée en charge horizontale.
+    \item \textbf{Stockage Objet (AWS S3) pour l'approche Stateless} : Dans une architecture distribuée, les conteneurs doivent être éphémères et sans état (\textit{stateless}). Si un microservice sauvegarde une image de produit localement sur son disque, cette donnée sera perdue au redémarrage du conteneur ou sera inaccessible pour les autres instances en cas de montée en charge (\textit{Scale-out}). L'utilisation d'un stockage objet déporté comme Amazon S3 permet de centraliser les médias de manière hautement disponible, tout en déchargeant nos serveurs applicatifs.
 
-    \item \textbf{Délégation de paiement (Stripe)} : Assure la sécurité financière et la conformité PCI-DSS en évitant le stockage de données sensibles en local.
+    \item \textbf{Délégation de paiement (Stripe) et conformité} : Le traitement des paiements en ligne soulève des contraintes légales et sécuritaires majeures, notamment la norme \textbf{PCI-DSS} (Payment Card Industry Data Security Standard). Traiter et stocker soi-même des données bancaires expose la plateforme à des risques de cyberattaques sévères. La délégation complète de cette logique à une passerelle spécialisée comme Stripe garantit une sécurité transactionnelle de niveau bancaire sans alourdir notre infrastructure.
 \end{enumerate}
 
 \textbf{Limites et contraintes identifiées :}
-L'adoption de ces solutions modernes n'est pas sans contreparties. L'utilisation de NestJS impose une courbe d'apprentissage initiale plus raide pour les développeurs habitués à des structures moins rigides. Par ailleurs, la dépendance à des services tiers comme AWS S3 ou Stripe introduit un risque de \textit{Vendor Lock-in} (dépendance vis-à-vis d'un fournisseur) et soumet le système à la disponibilité réseau de ces prestataires externes.
+L'adoption de ces services infonuagiques (\textit{Cloud Computing}) n'est pas sans contreparties. La forte dépendance à des services tiers comme AWS S3 ou Stripe introduit un risque de \textbf{\textit{Vendor Lock-in}} (dépendance vis-à-vis d'un fournisseur unique). De plus, elle soumet le système à la disponibilité réseau de ces prestataires externes : si l'API de Stripe tombe en panne, le processus de commande sur Techcare est bloqué malgré la résilience de nos propres microservices.
 
 \subsection{II.5.2 Gestion des transactions distribuées : Pattern Saga}
 
@@ -231,17 +332,17 @@ Dans une architecture microservices, l'absence de transaction globale (ACID) int
 \subsubsection{Définition formelle}
 Une Saga est une séquence de transactions locales $T_1, T_2, ..., T_n$ où chaque transaction $T_i$ possède une transaction compensatoire $C_i$. Si une transaction $T_k$ échoue, le système exécute les compensations $C_{k-1}, C_{k-2}, ..., C_1$ dans l'ordre inverse pour annuler les effets des transactions déjà validées.
 
-\subsubsection{Les deux approches de Saga}
+\textbf{Les deux approches de Saga :}
 
-\textbf{1. Orchestration (Centralisée)}
+\subsubsection{II.5.2.1 Orchestration (Centralisée)}
 Un coordinateur central (Orchestrator) pilote l'exécution des transactions.
 \begin{itemize}
     \item \textbf{Avantages} : Visibilité complète du flux, facilité de debugging
     \item \textbf{Inconvénients} : Point de défaillance unique (SPOF)
 \end{itemize}
 
-\textbf{2. Chorégraphie (Décentralisée)} - \textit{Choix retenu pour Techcare}
-Chaque service écoute des événements et déclenche ses propres actions.
+\subsubsection{II.5.2.2 Chorégraphie (Décentralisée)}
+\textit{Choix retenu pour Techcare.} Chaque service écoute des événements et déclenche ses propres actions.
 \begin{itemize}
     \item \textbf{Avantages} : Pas de SPOF, meilleure scalabilité
     \item \textbf{Inconvénients} : Complexité accrue du monitoring
@@ -270,7 +371,7 @@ Si le \texttt{PaymentService} échoue à l'étape 3, les compensations suivantes
 \textbf{Implémentation via RabbitMQ :}
 Chaque service publie des événements dans des exchanges dédiés. Les autres services écoutent les événements qui les concernent via des queues. Cette architecture événementielle garantit la résilience : si un service est temporairement indisponible, les messages restent dans la queue jusqu'à son retour en ligne.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \begin{tabular}{|l|l|l|}
         \hline
@@ -286,10 +387,17 @@ Chaque service publie des événements dans des exchanges dédiés. Les autres s
         \hline
     \end{tabular}
     \caption{Flux d'événements dans la Saga de commande}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{tab:saga_events}
 \end{table}
 
 Ce mécanisme de chorégraphie distribué est illustré techniquement par le diagramme de séquence présenté en section II.7.1 (page \pageref{fig:sequence_saga}).
+
+\subsection{II.5.3 Traçabilité Distribuée : L'enjeu de l'observabilité}
+
+Dans une architecture distribuée où une simple requête utilisateur peut traverser la Gateway et plusieurs microservices via RabbitMQ, la localisation de l'origine d'une panne devient extrêmement complexe. Si un "Timeout" survient, il est impossible de déterminer instantanément quel maillon de la chaîne a cédé en consultant les journaux standards.
+
+Pour pallier cette perte de visibilité, notre conception intègre dès l'origine le concept de \textbf{Traçabilité Distribuée (Distributed Tracing)}. Ce pattern consiste à attacher un identifiant unique (Trace ID) à chaque requête entrante. Cet identifiant est ensuite propagé de service en service, permettant de reconstruire le cycle de vie complet de la transaction. L'implémentation de cette solution s'appuiera sur des standards ouverts afin d'offrir une vue globale (topologie réseau, temps de traitement de chaque nœud) et d'isoler rapidement les composants défaillants sans modifier la logique métier.
 
 \section{II.6 Modélisation de la Sécurité : Zero Trust Architecture}
 \label{sec:security_master}
@@ -310,8 +418,9 @@ Dans notre conception, nous n'accordons aucune confiance implicite au réseau in
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{diagrams/sequence/sequence_auth.png}
+    \input{diagrams/sequence/sequence_auth.tex}
     \caption{Diagramme de séquence de l'authentification utilisateur}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{fig:sequence_auth}
 \end{figure}
 
@@ -350,8 +459,9 @@ Le flux se déroule ainsi :
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{diagrams/activity/activity_order.png}
+    \input{diagrams/activity/activity_order.tex}
     \caption{Diagramme d'activité du processus de commande}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{fig:activity_order}
 \end{figure}
 
@@ -364,8 +474,9 @@ Ce processus métier peut être analysé selon deux axes principaux :
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{diagrams/sequence/sequence_saga.png}
+    \input{diagrams/sequence/sequence_saga.tex}
     \caption{Diagramme de séquence du pattern Saga avec compensation}
+    \vspace{0.2cm}\small\textit{Source : Auteur}
     \label{fig:sequence_saga}
 \end{figure}
 

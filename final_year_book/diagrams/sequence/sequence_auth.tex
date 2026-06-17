@@ -1,0 +1,82 @@
+\begin{tikzpicture}[
+    node distance=1.0cm and 1.0cm,
+    font=\footnotesize,
+    >=Stealth,
+    participant/.style={draw, fill=blue!10, draw=blue!40, rounded corners=3pt, minimum width=1.8cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    actor/.style={draw, fill=teal!10, draw=teal!40, rounded corners=3pt, minimum width=1.8cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    database/.style={draw, cylinder, shape border rotate=90, fill=orange!10, draw=orange!40, minimum width=1.6cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries}
+]
+
+    % --- PARTICIPANTS ---
+    \node[actor] (User) at (0,0) {Utilisateur\\ (Client/Pharm)};
+    \node[participant] (UI) at (2.5,0) {Frontend\\ (Nuxt)};
+    \node[participant] (Gateway) at (5.5,0) {API\\ Gateway};
+    \node[participant] (Auth) at (8.5,0) {User Manager\\ Service};
+    \node[database] (DB) at (11.5,0) {PostgreSQL\\ (DB)};
+
+    % --- LIFELINES ---
+    \draw[dashed, gray!50] (User.south) -- (0,-12.0);
+    \draw[dashed, gray!50] (UI.south) -- (2.5,-12.0);
+    \draw[dashed, gray!50] (Gateway.south) -- (5.5,-12.0);
+    \draw[dashed, gray!50] (Auth.south) -- (8.5,-12.0);
+    \draw[dashed, gray!50] (DB.south) -- (11.5,-12.0);
+
+    % --- ACTIVATIONS ---
+    \draw[fill=teal!20, draw=teal!60] (2.42,-0.8) rectangle (2.58,-11.2);
+    \draw[fill=violet!20, draw=violet!60] (5.42,-1.5) rectangle (5.58,-10.4);
+    \draw[fill=olive!20, draw=olive!60] (8.42,-2.2) rectangle (8.58,-9.6);
+    \draw[fill=orange!20, draw=orange!60] (11.42,-2.9) rectangle (11.58,-3.6);
+
+    % --- MESSAGES ---
+    
+    % 1. User -> UI
+    \draw[->, thick] (0,-0.8) -- node[above, font=\scriptsize] {Saisit Identifiants (Email, Password)} (2.42,-0.8);
+    
+    % 2. UI -> Gateway
+    \draw[->, thick] (2.58,-1.5) -- node[above, font=\scriptsize] {POST /auth/login} (5.42,-1.5);
+    
+    % 3. Gateway -> Auth
+    \draw[->, thick] (5.58,-2.2) -- node[above, font=\scriptsize] {login\_user(email, password)} (8.42,-2.2);
+    
+    % 4. Auth -> DB
+    \draw[->, thick] (8.58,-2.9) -- node[above, font=\scriptsize] {Find user by email} (11.42,-2.9);
+    
+    % 5. DB --> Auth
+    \draw[->, dashed, thick] (11.42,-3.6) -- node[above, font=\scriptsize] {User Record (Hashed Password)} (8.58,-3.6);
+    
+    % 6. Auth -> Auth (Bcrypt)
+    \draw[->, thick] (8.58,-4.1) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {Comparer les\\ mots de passe (bcrypt)} ++(0,-0.4) -- (8.58,-4.5);
+
+    % Box Alt : Identifiants valides / invalides
+    \draw[draw=gray!40, fill=gray!2, fill opacity=0.3, rounded corners=2pt] (-0.3,-4.9) rectangle (12.0,-12.2);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-4.9) {alt : Identifiants valides};
+    
+    % 7. Auth -> Auth (Generate JWT)
+    \draw[->, thick] (8.58,-5.3) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {Générer JWT\\ Access Token} ++(0,-0.4) -- (8.58,-5.7);
+    
+    % 8. Auth -> Gateway
+    \draw[->, dashed, thick] (8.42,-6.4) -- node[above, font=\scriptsize] {Response: \{ user, accessToken \}} (5.58,-6.4);
+    
+    % 9. Gateway -> UI
+    \draw[->, dashed, thick] (5.42,-7.0) -- node[above, font=\scriptsize] {200 OK + JWT} (2.58,-7.0);
+    
+    % 10. UI -> UI (Store JWT)
+    \draw[->, thick] (2.58,-7.6) -- ++(0.5,0) -- node[midway, right, font=\scriptsize, align=left] {Stocker JWT dans\\ localStore/Vuex} ++(0,-0.4) -- (2.58,-8.0);
+    
+    % 11. UI -> User
+    \draw[->, thick] (2.42,-8.5) -- node[above, font=\scriptsize] {Redirection vers Dashboard} (0,-8.5);
+    
+    % Else Line
+    \draw[dashed, gray!40] (-0.3,-8.9) -- (12.0,-8.9);
+    \node[anchor=north west, font=\scriptsize\bfseries\color{gray}] at (-0.3,-8.9) {else : Identifiants invalides};
+    
+    % 12. Auth -> Gateway
+    \draw[->, dashed, thick] (8.42,-9.6) -- node[above, font=\scriptsize] {Error: Unauthorized} (5.58,-9.6);
+    
+    % 13. Gateway -> UI
+    \draw[->, dashed, thick] (5.42,-10.4) -- node[above, font=\scriptsize] {401 Unauthorized} (2.58,-10.4);
+    
+    % 14. UI -> User
+    \draw[->, thick] (2.42,-11.2) -- node[above, font=\scriptsize] {Message: Email ou mot de passe incorrect} (0,-11.2);
+
+\end{tikzpicture}

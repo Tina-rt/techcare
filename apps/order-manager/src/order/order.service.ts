@@ -333,16 +333,21 @@ export class OrderService {
       salesAmountGraph.datasets[0].data[month] += order.totalAmount;
 
       (order.items as OrderItem[]).forEach((item) => {
-        productCounts[item.name] =
-          (productCounts[item.name] || 0) + item.quantity;
+        const name = item.name || 'Produit inconnu';
+        productCounts[name] = (productCounts[name] || 0) + item.quantity;
       });
     });
 
+    const sortedProducts = Object.entries(productCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+
     const orderedProductGraph = {
-      labels: Object.keys(productCounts).slice(0, 5),
+      labels: sortedProducts.map(([name]) => name),
       datasets: [
         {
-          data: Object.values(productCounts).slice(0, 5),
+          label: 'Quantité commandée',
+          data: sortedProducts.map(([, count]) => count),
           backgroundColor: [
             '#3b82f6',
             '#10b981',

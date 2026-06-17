@@ -1,4 +1,0 @@
-\contentsline {chapter}{\numberline {1}One}{2}{}%
-\contentsline {section}{\numberline {1.1}Sub}{2}{}%
-\contentsline {chapter}{\numberline {2}Two}{3}{}%
-\contentsline {chapter}{TABLE DES MATIÈRES}{4}{}%

@@ -1,15 +1,18 @@
 \babel@toc {french}{}\relax 
-\contentsline {table}{\numberline {2}{\ignorespaces Les parcours en Licence et Master}}{6}{table.0.2}%
-\contentsline {table}{\numberline {3}{\ignorespaces Comparaison des systèmes de persistance retenus}}{19}{table.0.3}%
-\contentsline {table}{\numberline {4}{\ignorespaces Flux d'événements dans la Saga de commande}}{21}{table.0.4}%
-\contentsline {table}{\numberline {5}{\ignorespaces Récapitulatif des microservices de la plateforme Techcare}}{30}{table.0.5}%
-\contentsline {table}{\numberline {6}{\ignorespaces Référence synthétique des endpoints de l'API Gateway Techcare}}{33}{table.0.6}%
-\contentsline {table}{\numberline {7}{\ignorespaces Endpoints du module Authentification}}{xiii}{table.Alph0.7}%
-\contentsline {table}{\numberline {8}{\ignorespaces Endpoints du module Produits}}{xiii}{table.Alph0.8}%
-\contentsline {table}{\numberline {9}{\ignorespaces Endpoints du module Catégories}}{xiv}{table.Alph0.9}%
-\contentsline {table}{\numberline {10}{\ignorespaces Endpoints du module Inventaire}}{xiv}{table.Alph0.10}%
-\contentsline {table}{\numberline {11}{\ignorespaces Endpoints du module Panier}}{xiv}{table.Alph0.11}%
-\contentsline {table}{\numberline {12}{\ignorespaces Endpoints du module Commandes}}{xv}{table.Alph0.12}%
-\contentsline {table}{\numberline {13}{\ignorespaces Endpoints du module Paiement}}{xv}{table.Alph0.13}%
-\contentsline {table}{\numberline {14}{\ignorespaces Endpoints du module Fichiers}}{xvi}{table.Alph0.14}%
-\contentsline {table}{\numberline {15}{\ignorespaces Codes d'erreur HTTP retournés par l'API Gateway}}{xvi}{table.Alph0.15}%
+\contentsline {table}{\numberline {1}{\ignorespaces Les parcours en Licence et Master}}{6}{table.caption.3}%
+\contentsline {table}{\numberline {2}{\ignorespaces Comparaison entre l'architecture monolithique et microservices}}{16}{table.caption.9}%
+\contentsline {table}{\numberline {3}{\ignorespaces Comparaison des systèmes de persistance retenus}}{23}{table.caption.17}%
+\contentsline {table}{\numberline {4}{\ignorespaces Flux d'événements dans la Saga de commande}}{26}{table.caption.19}%
+\contentsline {table}{\numberline {5}{\ignorespaces Récapitulatif des microservices de la plateforme Techcare}}{36}{table.caption.29}%
+\contentsline {table}{\numberline {6}{\ignorespaces Référence synthétique des endpoints de l'API Gateway Techcare}}{39}{table.caption.31}%
+\contentsline {table}{\numberline {7}{\ignorespaces Comparaison de la complexité cyclomatique : Monolithe vs. Microservices (Lizard)}}{60}{table.caption.53}%
+\contentsline {table}{\numberline {8}{\ignorespaces Bilan quantitatif des performances et de la structure du code}}{62}{table.caption.55}%
+\contentsline {table}{\numberline {9}{\ignorespaces Endpoints du module Authentification}}{xii}{table.caption.67}%
+\contentsline {table}{\numberline {10}{\ignorespaces Endpoints du module Produits}}{xiii}{table.caption.68}%
+\contentsline {table}{\numberline {11}{\ignorespaces Endpoints du module Catégories}}{xiii}{table.caption.69}%
+\contentsline {table}{\numberline {12}{\ignorespaces Endpoints du module Inventaire}}{xiii}{table.caption.70}%
+\contentsline {table}{\numberline {13}{\ignorespaces Endpoints du module Panier}}{xiv}{table.caption.71}%
+\contentsline {table}{\numberline {14}{\ignorespaces Endpoints du module Commandes}}{xiv}{table.caption.72}%
+\contentsline {table}{\numberline {15}{\ignorespaces Endpoints du module Paiement}}{xv}{table.caption.73}%
+\contentsline {table}{\numberline {16}{\ignorespaces Endpoints du module Fichiers}}{xv}{table.caption.74}%
+\contentsline {table}{\numberline {17}{\ignorespaces Codes d'erreur HTTP retournés par l'API Gateway}}{xvi}{table.caption.75}%

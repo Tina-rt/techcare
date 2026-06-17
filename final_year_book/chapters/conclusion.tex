@@ -16,22 +16,12 @@ Pour y répondre, nous avons adopté une démarche scientifique et progressive. 
 
 \vspace{0.3cm}
 
-Les objectifs fixés en début de projet ont été atteints :
-
-\begin{itemize}
-    \item \textbf{Scalabilité} : L'architecture microservices permet désormais de faire évoluer indépendamment chaque domaine métier. Le \textit{Product Service} peut absorber des pics de consultation sans impacter le traitement des paiements.
-
-    \item \textbf{Résilience} : Le pattern Saga avec compensation garantit l'intégrité des données distribuées. La panne d'un service n'entraîne plus l'indisponibilité totale de la plateforme.
-
-    \item \textbf{Maintenabilité} : L'architecture hexagonale adoptée au sein de chaque service et le langage ubiquiste du DDD ont rendu le code aligné sur le métier pharmaceutique, réduisant considérablement les risques de régression lors des évolutions.
-
-    \item \textbf{Sécurité} : La stratégie Zero Trust, la propagation d'identité via JWT et le contrôle d'accès par rôles (RBAC) offrent un niveau de sécurité adapté à un contexte médical sensible.
-\end{itemize}
+Les objectifs fixés au début de ce projet ont été pleinement atteints. Sur le plan de la scalabilité, l'architecture microservices permet désormais de faire évoluer indépendamment chaque domaine métier. Par exemple, le service de gestion des produits peut absorber des pics de consultation importants sans que cela n'impacte le traitement des paiements. En matière de résilience, l'intégration du pattern Saga avec un mécanisme de compensation garantit l'intégrité des données distribuées, assurant ainsi que la panne d'un service n'entraîne plus l'indisponibilité totale de la plateforme. Concernant la maintenabilité, l'adoption d'une architecture hexagonale au sein de chaque service, couplée à l'utilisation du langage ubiquiste issu du Domain-Driven Design, a permis de concevoir un code parfaitement aligné sur le métier pharmaceutique. Cela réduit considérablement les risques de régression lors des évolutions futures. Enfin, du point de vue de la sécurité, la mise en place d'une stratégie Zero Trust, la propagation de l'identité via des jetons JWT et un contrôle d'accès basé sur les rôles (RBAC) offrent un niveau de protection optimal et adapté aux exigences d'un contexte médical sensible.
 
 \vspace{0.3cm}
 
-Néanmoins, cette transition n'est pas sans limites. La complexité opérationnelle accrue, la gestion de la consistance éventuelle, ainsi que le léger compromis sur la latence réseau (le fameux "impôt de la distribution") représentent des défis concrets inhérents aux systèmes distribués. Ces limites, identifiées et mesurées lors de nos phases de test, constituent une véritable feuille de route pour les évolutions futures. Les perspectives d'optimisation sont claires : l'orchestration dynamique avec Kubernetes, l'adoption d'un \textit{Service Mesh} pour déléguer la sécurité inter-services et rendre le réseau observable sans modifier le code applicatif, ou encore l'intégration d'un cache Redis et du protocole gRPC pour pulvériser les temps de réponse.
+Néanmoins, cette transition n'est pas sans limites. La complexité opérationnelle accrue, la gestion de la consistance éventuelle, ainsi que le léger compromis sur la latence réseau (le fameux "impôt de la distribution") représentent des défis concrets inhérents aux systèmes distribués. Ces limites, identifiées et mesurées lors de nos phases de test, constituent une véritable feuille de route pour les évolutions futures. Les perspectives d'optimisation sont claires : l'orchestration dynamique avec Kubernetes, l'adoption d'un \textit{Service Mesh} pour déléguer la sécurité inter-services et renforcer l'observabilité existante sans modifier le code applicatif, ou encore l'intégration d'un cache Redis et du protocole gRPC pour pulvériser les temps de réponse.
 
 \vspace{0.3cm}
 
-En définitive, ce projet démontre qu'une migration vers les microservices ne doit pas être menée comme une fin en soi, mais comme une réponse mesurée à des besoins métiers concrets et quantifiables. Techcare dispose aujourd'hui d'un socle technologique moderne, évolutif et aligné sur les meilleures pratiques de l'industrie logicielle, prêt à accompagner la croissance de la plateforme pharmaceutique de demain.
+En définitive, ce projet démontre qu'une migration vers les microservices ne doit pas être menée comme une fin en soi, mais comme une réponse mesurée à des besoins métiers concrets et quantifiables. 

@@ -13,6 +13,9 @@
 \usepackage{xcolor}
 \usepackage{float}
 \usepackage[hidelinks]{hyperref}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, shapes.multipart}
 
 % Gestion des titres
 \usepackage{titlesec}
@@ -30,6 +33,9 @@
 \usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{tcolorbox}
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{verbatim}{\par\addvspace{0.5em}\noindent\begin{minipage}{\linewidth}\setstretch{0.9}}
+\AfterEndEnvironment{verbatim}{\end{minipage}\par\addvspace{0.5em}}
 
 % Listes
 \usepackage{enumitem}
@@ -204,8 +210,7 @@
         \item Enfin, à toutes les personnes qui, de près ou de loin, ont apporté leur aide dans la réalisation de ce mémoire et la conception du projet Jereo.
     \end{itemize}
 
-    \input{section/resume.tex}
-
+    
     \newpage
     \printsommaire
 
@@ -242,8 +247,9 @@
     \newcounter{savepage}
     \setcounter{savepage}{\value{page}}
     \pagenumbering{arabic}
+    \setcounter{table}{0}
 
-   \input{chapters/introduction.tex}
+    \input{chapters/introduction.tex}
 
    \newpage
     \input{chapters/chapter1.tex}
@@ -268,4 +274,7 @@
     \newpage
     % Génération de la table des matières via etoc (solution alternative à \tableofcontents)
     \printmanualtoc
+    \newpage
+    \input{section/resume.tex}
+    
 \end{document}

@@ -25,6 +25,20 @@ export class FileService {
       this.fileClient,
       'upload_file',
       payload,
+      undefined,
+      60_000, // 60s — S3 uploads can be slow for large files
+    );
+  }
+
+  async getPresignedUploadUrl(
+    filename: string,
+    mimeType: string,
+    folder: string = 'products',
+  ): Promise<{ uploadUrl: string; fileKey: string; finalUrl: string }> {
+    return sendAndCatch<{ uploadUrl: string; fileKey: string; finalUrl: string }>(
+      this.fileClient,
+      'get_presigned_upload_url',
+      { filename, mimeType, folder },
     );
   }
 }

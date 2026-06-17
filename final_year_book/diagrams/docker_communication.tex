@@ -1,0 +1,140 @@
+\begin{tikzpicture}[
+    node distance=1.2cm and 1.5cm,
+    box/.style={
+        draw=gray!50,
+        fill=white,
+        rounded corners=3pt,
+        minimum width=3.8cm,
+        minimum height=0.75cm,
+        align=center,
+        font=\small\sffamily
+    },
+    bluebox/.style={
+        draw=blue!50!cyan,
+        fill=blue!5,
+        rounded corners=3pt,
+        minimum width=4.5cm,
+        minimum height=0.9cm,
+        align=center,
+        font=\bfseries\small\sffamily
+    },
+    purplebox/.style={
+        draw=violet!60,
+        fill=violet!5,
+        rounded corners=3pt,
+        minimum width=4.0cm,
+        minimum height=0.8cm,
+        align=center,
+        font=\bfseries\small\sffamily
+    },
+    cloudbox/.style={
+        draw=violet!60,
+        fill=violet!5,
+        dashed,
+        rounded corners=3pt,
+        minimum width=5.0cm,
+        minimum height=0.9cm,
+        align=center,
+        font=\bfseries\small\sffamily
+    },
+    dbshape/.style={
+        cylinder,
+        draw=violet!60,
+        fill=violet!5,
+        minimum width=2.6cm,
+        minimum height=1.0cm,
+        shape border rotate=90,
+        aspect=0.25,
+        align=center,
+        font=\bfseries\small\sffamily
+    },
+    frame/.style={
+        draw=gray!40,
+        fill=yellow!5,
+        rounded corners=6pt,
+        inner sep=12pt
+    },
+    outerframe/.style={
+        draw=yellow!60!olive,
+        fill=yellow!3,
+        rounded corners=8pt,
+        inner sep=15pt
+    }
+]
+
+    % Nodes Placement
+    
+    % Client (outside infrastructure)
+    \node[purplebox] (client) at (0, 10.5) {Client (Frontend)};
+    
+    % Infrastructure Docker elements
+    \node[bluebox] (gateway) at (0, 8.0) {API Gateway (NestJS)};
+    \node[bluebox] (rabbitmq) at (0, 5.5) {RabbitMQ Broker};
+    
+    % Services Métier (Left Column)
+    \node[box] (user) at (-3.5, 2.0) {user-manager};
+    \node[box] (product) at (-3.5, 1.0) {product-manager};
+    \node[box] (cart) at (-3.5, 0.0) {cart-manager};
+    \node[box] (order) at (-3.5, -1.0) {order-manager};
+    \node[box] (inventory) at (-3.5, -2.0) {inventory-manager};
+    
+    % Services Support (Right Column)
+    \node[box] (file) at (3.5, 1.7) {file-manager};
+    \node[box] (payment) at (3.5, 0.7) {payment-manager};
+    \node[box] (notification) at (3.5, -0.3) {notification-manager};
+    \node[box] (jaeger) at (3.5, -1.3) {jaeger (Tracing)};
+    
+    % Persistance (Bottom)
+    \node[dbshape] (postgres) at (-1.5, -4.5) {PostgreSQL};
+    \node[dbshape] (mongodb) at (1.5, -4.5) {MongoDB};
+    
+    % External Services (Outside Docker at the bottom)
+    \node[cloudbox] (external) at (0, -7.5) {Services Cloud Externes\\(AWS S3 / Stripe)};
+
+    % Background Frames (Ordered from back to front)
+    \begin{scope}[on background layer]
+        % 1. Outer Frame (Infrastructure Docker)
+        \node[outerframe, fit=(gateway) (rabbitmq) (user) (inventory) (file) (jaeger) (postgres) (mongodb),
+              label={[anchor=south west, font=\bfseries\sffamily, text=olive!90!black, xshift=12pt, yshift=2pt]north west:Infrastructure Docker}] (docker_frame) {};
+        
+        % 2. Microservices Layer Box (Middle Frame)
+        \node[draw=yellow!80!olive!70, fill=yellow!8, rounded corners=6pt, inner sep=16pt, fit=(user) (inventory) (file) (jaeger),
+              label={[anchor=south, font=\bfseries\small\sffamily, text=olive!90!black, yshift=2pt]above:Microservices Layer}] (ms_layer_frame) {};
+        
+        % 3. Services Métier Box (Inner Frame Left)
+        \node[frame, fit=(user) (inventory),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=olive!80!black, xshift=8pt, yshift=2pt]north west:Services Métier}] (metier_frame) {};
+        
+        % 4. Services Support Box (Inner Frame Right)
+        \node[frame, fit=(file) (jaeger),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=olive!80!black, xshift=8pt, yshift=2pt]north west:Services Support}] (support_frame) {};
+        
+        % 5. Persistance Box (Inner Frame Bottom)
+        \node[frame, fit=(postgres) (mongodb),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=olive!80!black, xshift=8pt, yshift=2pt]north west:Persistance (Bases)}] (persistance_frame) {};
+    \end{scope}
+
+    % Connections
+    
+    % Client -> Gateway
+    \draw[-{Stealth[scale=1.2]}, thick] (client) -- node[fill=white, draw=gray!30, rounded corners=2pt, font=\scriptsize\sffamily, inner sep=2pt] {HTTP/REST} (gateway);
+    
+    % Gateway -> RabbitMQ
+    \draw[-{Stealth[scale=1.2]}, thick] (gateway) -- node[fill=white, draw=gray!30, rounded corners=2pt, font=\scriptsize\sffamily, inner sep=2pt] {RPC} (rabbitmq);
+    
+    % RabbitMQ <-> Services Métier
+    \draw[{Stealth[scale=1.0]}-{Stealth[scale=1.0]}, thick] (rabbitmq.south west) to[out=210, in=90] (metier_frame.north);
+    
+    % RabbitMQ <-> Services Support
+    \draw[{Stealth[scale=1.0]}-{Stealth[scale=1.0]}, thick] (rabbitmq.south east) to[out=330, in=90] (support_frame.north);
+    
+    % Services Métier -> Persistance
+    \draw[thick] (metier_frame.south) to[out=270, in=135] (persistance_frame.north west);
+    
+    % Services Support -> Persistance
+    \draw[thick] (support_frame.south) to[out=270, in=45] (persistance_frame.north east);
+    
+    % Services Support -> External Cloud Services
+    \draw[thick, dashed, -{Stealth[scale=1.0]}] (support_frame.south) to[out=290, in=45] (external.north east);
+
+\end{tikzpicture}

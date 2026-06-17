@@ -1,0 +1,20 @@
+config:
+  target: "http://localhost:3003"
+  phases:
+    - duration: 60          # Phase de chauffe (Warm-up)
+      arrivalRate: 5        # 5 nouveaux utilisateurs par seconde
+      name: "Chauffe"
+    - duration: 120         # Phase de croisière (Sustained load)
+      arrivalRate: 20       # 20 nouveaux utilisateurs par seconde
+      name: "Charge constante"
+    - duration: 60          # Phase de stress (Stress test)
+      rampTo: 100           # On monte jusqu'à 100 utilisateurs/sec
+      name: "Pic de charge"
+
+
+
+scenarios:
+  - name: "Consultation catalogue"
+    flow:
+      - get:
+          url: "/api/produit"

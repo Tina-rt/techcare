@@ -1,3 +1,7 @@
+import 'reflect-metadata';
+import { initTracing } from '@app/shared';
+initTracing('cart-manager');
+
 import { NestFactory } from '@nestjs/core';
 import { CartManagerModule } from './cart-manager.module';
 import { ValidationPipe } from '@nestjs/common';

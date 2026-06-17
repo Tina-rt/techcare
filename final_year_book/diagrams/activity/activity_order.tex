@@ -1,0 +1,87 @@
+\begin{tikzpicture}[
+    node distance=1.0cm and 1.0cm,
+    font=\footnotesize,
+    >=Stealth,
+    startstop/.style={draw, rounded corners=10pt, fill=blue!10, draw=blue!50, minimum width=2.5cm, minimum height=0.6cm, align=center, thick},
+    process/.style={draw, fill=gray!5, draw=gray!40, minimum width=3.0cm, minimum height=0.8cm, text width=2.8cm, align=center, rounded corners=3pt},
+    decision/.style={draw, diamond, aspect=1.8, fill=orange!10, draw=orange!50, minimum width=2.5cm, minimum height=0.8cm, text width=2.1cm, align=center, inner sep=0pt},
+    arrow/.style={->, thick}
+]
+
+    % --- GAUCHE : PROCESSUS CLIENT ---
+    \node (start) [startstop] at (0,0) {Début};
+    \node (consulte) [process] at (0,-1.5) {Client consulte\\ le catalogue};
+    \node (recherche) [process] at (0,-3.0) {Recherche d'un\\ produit spécifique};
+    \node (trouve) [decision] at (0,-4.75) {Produit trouvé ?};
+    \node (trouve_non) [process] at (-4.0,-4.75) {Afficher "Produit\\ non trouvé"};
+    \node (stop_left) [startstop] at (-4.0,-6.25) {Fin (Annulé)};
+    
+    \node (panier) [process] at (0,-6.5) {Ajouter au panier};
+    \node (verif_panier) [process] at (0,-8.0) {Vérifier le contenu\\ du panier};
+    \node (valider) [decision] at (0,-9.75) {Valider la\\ commande ?};
+    \node (valider_non) [process] at (-4.0,-9.75) {Continuer les achats};
+    
+    \node (auth) [process] at (0,-11.5) {S'authentifier (JWT)};
+    \node (adresse) [process] at (0,-13.0) {Saisir l'adresse\\ de livraison};
+    \node (paiement_mode) [process] at (0,-14.5) {Sélectionner le\\ mode de paiement};
+
+    % --- DROITE : TRAITEMENT SAGA ---
+    \node (verif_dispo) [process] at (4.8,-1.5) {Vérification de la\\ disponibilité};
+    \node (dispo_check) [decision] at (4.8,-3.0) {Stock disponible ?};
+    \node (dispo_non) [process] at (8.8,-3.0) {Afficher rupture\\ de stock};
+    \node (stop_right_dispo) [startstop] at (8.8,-4.75) {Fin (Annulé)};
+    
+    \node (reserve) [process] at (4.8,-4.75) {Réservation du stock};
+    \node (pay_stripe) [process] at (4.8,-6.5) {Procéder au\\ paiement (Stripe)};
+    \node (pay_check) [decision] at (4.8,-8.25) {Paiement réussi ?};
+    
+    \node (pay_non) [process] at (8.8,-8.25) {Libérer la réservation\\ de stock};
+    \node (pay_err) [process] at (8.8,-9.75) {Afficher erreur\\ de paiement};
+    \node (stop_right_pay) [startstop] at (8.8,-11.5) {Fin (Échec)};
+    
+    \node (confirm) [process] at (4.8,-10.0) {Confirmer la\\ commande};
+    \node (notif) [process] at (4.8,-11.5) {Envoyer notification\\ de succès};
+    \node (stop) [startstop] at (4.8,-13.0) {Fin (Succès)};
+
+    % --- BOITE SAGA (BACKGROUND) ---
+    \begin{scope}[on background layer]
+        \node (saga_box) [draw=gray!40, dashed, fill=gray!3, rounded corners=8pt, inner sep=15pt,
+            fit=(verif_dispo) (stop) (dispo_non) (pay_err) (stop_right_dispo) (stop_right_pay),
+            label={[text=gray!70, font=\bfseries]above:Traitement Commande (Saga)}] {};
+    \end{scope}
+
+    % --- LIENS GAUCHE ---
+    \draw [arrow] (start) -- (consulte);
+    \draw [arrow] (consulte) -- (recherche);
+    \draw [arrow] (recherche) -- (trouve);
+    \draw [arrow] (trouve) -- node[left] {oui} (panier);
+    \draw [arrow] (trouve) -- node[above] {non} (trouve_non);
+    \draw [arrow] (trouve_non) -- (stop_left);
+    \draw [arrow] (panier) -- (verif_panier);
+    \draw [arrow] (verif_panier) -- (valider);
+    \draw [arrow] (valider) -- node[left] {oui} (auth);
+    \draw [arrow] (valider) -- node[above] {non} (valider_non);
+    \draw [arrow] (auth) -- (adresse);
+    \draw [arrow] (adresse) -- (paiement_mode);
+
+    % --- BOUCLE CONTINUER ACHATS ---
+    \draw [arrow] (valider_non.west) -- ++(-0.5,0) |- (consulte.west);
+
+    % --- LIEN GAUCHE -> DROITE (SAGA) ---
+    \draw [arrow] (paiement_mode.south) -- ++(0,-0.4) -- (2.4, -15.3) |- (verif_dispo.west);
+
+    % --- LIENS DROITE ---
+    \draw [arrow] (verif_dispo) -- (dispo_check);
+    \draw [arrow] (dispo_check) -- node[left] {oui} (reserve);
+    \draw [arrow] (dispo_check) -- node[above] {non} (dispo_non);
+    \draw [arrow] (dispo_non) -- (stop_right_dispo);
+    \draw [arrow] (reserve) -- (pay_stripe);
+    \draw [arrow] (pay_stripe) -- (pay_check);
+    \draw [arrow] (pay_check) -- node[left] {oui} (confirm);
+    \draw [arrow] (pay_check) -- node[above] {non} (pay_non);
+    \draw [arrow] (pay_non) -- (pay_err);
+    \draw [arrow] (pay_err) -- (stop_right_pay);
+    \draw [arrow] (confirm) -- (notif);
+    \draw [arrow] (notif) -- (stop);
+
+\end{tikzpicture}

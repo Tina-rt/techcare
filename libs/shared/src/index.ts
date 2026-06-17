@@ -4,3 +4,4 @@ export * from './enums/index';
 export * from './types/index';
 export * from './utils/rpc.util';
 export * from './utils/csv.util';
+export * from './tracing';

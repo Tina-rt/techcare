@@ -1,0 +1,180 @@
+\begin{tikzpicture}[
+    scale=0.58,
+    transform shape,
+    node distance=1.0cm and 1.2cm,
+    umlclass/.style={
+        draw=black!70,
+        fill=white,
+        minimum width=3.3cm,
+        minimum height=0.7cm,
+        align=center,
+        font=\small\sffamily\bfseries,
+        rounded corners=2pt
+    },
+    note/.style={
+        draw=orange!40,
+        fill=orange!5,
+        rounded corners=2pt,
+        font=\scriptsize\sffamily,
+        align=left,
+        minimum width=2.6cm
+    },
+    frame/.style={
+        draw=gray!30,
+        fill=gray!3,
+        rounded corners=4pt,
+        inner sep=8pt
+    },
+    gateway_frame/.style={
+        draw=blue!30,
+        fill=blue!3,
+        rounded corners=4pt,
+        inner sep=8pt,
+        minimum height=2cm
+    }
+]
+
+    % ==========================================
+    % NODES PLACEMENT
+    % ==========================================
+
+    % --- Package API Gateway (Top Center - y=10.0) ---
+    \node[umlclass] (Gateway) at (0.0, 10.0) {Gateway};
+    \node[umlclass] (JwtAuthGuard) at (4.0, 10.0) {JwtAuthGuard};
+
+    % --- ROW 1 (TOP): Services (y = 6.0 to 2.0) ---
+    
+    % Col 1: User Manager Service
+    \node[umlclass] (UserService) at (-9.0, 6.0) {UserService};
+    \node[umlclass] (User) at (-9.0, 4.0) {User (Entity)};
+    \node[umlclass] (Role) at (-9.0, 2.0) {«enum»\\Role};
+
+    % Col 2: Product Manager Service
+    \node[umlclass] (ProductController) at (-3.0, 6.0) {ProductController};
+    \node[umlclass] (ProductService) at (-3.0, 4.0) {ProductService};
+    \node[umlclass] (Product) at (-3.0, 2.0) {Product (Entity)};
+
+    % Col 3: Inventory Manager Service
+    \node[umlclass] (InventoryController) at (3.0, 6.0) {InventoryController};
+    \node[umlclass] (InventoryService) at (3.0, 4.0) {InventoryService};
+    \node[umlclass] (Inventory) at (3.0, 2.0) {Inventory (Entity)};
+
+    % Col 4: Cart Manager Service
+    \node[umlclass] (CartController) at (9.0, 6.0) {CartController};
+    \node[umlclass] (CartService) at (9.0, 4.0) {CartService};
+    \node[umlclass] (Cart) at (9.0, 2.0) {Cart (Entity)};
+
+    % --- ROW 2 (BOTTOM): Services (y = -2.0 to -6.0) ---
+
+    % Col 1: Order Manager Service
+    \node[umlclass] (OrderController) at (-9.0, -2.0) {OrderController};
+    \node[umlclass] (OrderService) at (-9.0, -4.0) {OrderService};
+    \node[umlclass] (Order) at (-9.0, -6.0) {Order (Entity)};
+
+    % Col 2: Payment Manager Service
+    \node[umlclass] (PaymentController) at (-3.0, -2.0) {PaymentController};
+    \node[umlclass] (PaymentService) at (-3.0, -4.0) {PaymentService};
+
+    % Col 3: File Manager Service
+    \node[umlclass] (FileController) at (3.0, -2.0) {FileController};
+    \node[umlclass] (FileService) at (3.0, -4.0) {FileService};
+
+    % Col 4: Notification Service
+    \node[umlclass] (NotificationController) at (9.0, -2.0) {NotificationController};
+    \node[umlclass] (NotificationService) at (9.0, -4.0) {NotificationService};
+
+
+    % ==========================================
+    % NOTES
+    % ==========================================
+
+    
+    \node[note] (product_note) at (-3.0, 0.4) {
+        \textbf{MongoDB}\\
+        Schéma flexible pour\\
+        spécifications produits
+    };
+    
+    \node[note] (inventory_note) at (3.0, 0.4) {
+        \textbf{PostgreSQL}\\
+        Garanties ACID\\
+        Gestion des stocks
+    };
+    
+    \node[note] (order_note) at (-9.0, -7.6) {
+        \textbf{PostgreSQL}\\
+        Transaction Saga\\
+        Gestion commandes
+    };
+
+    % ==========================================
+    % BACKGROUND FRAMES (Packages)
+    % ==========================================
+    \begin{scope}[on background layer]
+        % API Gateway Package
+        \node[gateway_frame, fit=(Gateway) (JwtAuthGuard),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=blue!70!black, xshift=6pt, yshift=2pt]north west:API Gateway}] (gateway_pkg) {};
+              
+        % ROW 1 (TOP):
+        % User Manager Package
+        \node[frame, fit=(UserService) (User) (Role),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:User Manager Service}] (user_pkg) {};
+              
+        % Product Manager Package
+        \node[frame, fit=(ProductController) (ProductService) (Product) (product_note),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Product Manager Service}] (product_pkg) {};
+              
+        % Inventory Manager Package
+        \node[frame, fit=(InventoryController) (InventoryService) (Inventory) (inventory_note),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Inventory Manager Service}] (inventory_pkg) {};
+
+        % Cart Manager Package
+        \node[frame, fit=(CartController) (CartService) (Cart),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Cart Manager Service}] (cart_pkg) {};
+              
+        % ROW 2 (BOTTOM):
+        % Order Manager Package
+        \node[frame, fit=(OrderController) (OrderService) (Order) (order_note),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Order Manager Service}] (order_pkg) {};
+
+        % Payment Manager Package
+        \node[frame, fit=(PaymentController) (PaymentService),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Payment Manager Service}] (payment_pkg) {};
+              
+        % File Manager Package
+        \node[frame, fit=(FileController) (FileService),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:File Manager Service}] (file_pkg) {};
+              
+        % Notification Package
+        \node[frame, fit=(NotificationController) (NotificationService),
+              label={[anchor=south west, font=\bfseries\small\sffamily, text=gray!80!black, xshift=6pt, yshift=2pt]north west:Notification Service}] (notification_pkg) {};
+    \end{scope}
+
+    % ==========================================
+    % CONNECTIONS (Pure Class Relations)
+    % ==========================================
+
+    % Gateway ..> JwtAuthGuard
+    \draw[dashed, ->, >=stealth, thick] (Gateway) -- (JwtAuthGuard);
+    
+    % Internal layers (vertical Controller -> Service -> Entity)
+    \draw[->, >=stealth, thick] (UserService) -- (User);
+    \draw[->, >=stealth, thick] (User) -- (Role);
+
+    \draw[->, >=stealth, thick] (ProductController) -- (ProductService);
+    \draw[->, >=stealth, thick] (ProductService) -- (Product);
+    
+    \draw[->, >=stealth, thick] (InventoryController) -- (InventoryService);
+    \draw[->, >=stealth, thick] (InventoryService) -- (Inventory);
+
+    \draw[->, >=stealth, thick] (CartController) -- (CartService);
+    \draw[->, >=stealth, thick] (CartService) -- (Cart);
+
+    \draw[->, >=stealth, thick] (OrderController) -- (OrderService);
+    \draw[->, >=stealth, thick] (OrderService) -- (Order);
+    
+    \draw[->, >=stealth, thick] (PaymentController) -- (PaymentService);
+    \draw[->, >=stealth, thick] (FileController) -- (FileService);
+    \draw[->, >=stealth, thick] (NotificationController) -- (NotificationService);
+
+\end{tikzpicture}

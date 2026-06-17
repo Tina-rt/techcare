@@ -52,6 +52,17 @@ export class FileManagerController {
     );
   }
 
+  @MessagePattern('get_presigned_upload_url')
+  async handleGetPresignedUrl(
+    @Payload() data: { filename: string; mimeType: string; folder?: string },
+  ) {
+    return this.fileManagerService.generatePresignedUploadUrl(
+      data.filename,
+      data.mimeType,
+      data.folder,
+    );
+  }
+
   @Get('test')
   testEndpoint() {
     return { message: 'File Manager is up and running!' };

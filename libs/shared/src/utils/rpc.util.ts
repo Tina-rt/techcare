@@ -15,11 +15,12 @@ export async function sendAndCatch<TResult = unknown, TInput = unknown>(
   pattern: RpcPattern,
   data: TInput,
   defaultValue?: TResult,
+  timeoutMs: number = 5000,
 ): Promise<TResult> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return lastValueFrom(
     client.send<TResult, TInput>(pattern, data).pipe(
-      timeout(5000),
+      timeout(timeoutMs),
       catchError((error) => {
         if (error instanceof TimeoutError) {
           return throwError(

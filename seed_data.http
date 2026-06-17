@@ -1,0 +1,218 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoicnRpbmFodWJlcnRAZ21haWwuY29tIiwiaWF0IjoxNzc4MDY5MTk5LCJleHAiOjE3NzgxNTU1OTl9.8KS5Rg6NvGZpEJhw2GRaWOwPfu-BsVu_zLS7dwSMgN4
+
+# Liste des catégories existantes
+GET http://localhost:4001/category
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Création des Produits Para-pharmaceutiques
+
+# Produit 1: Pommade
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Baume du Tigre Rouge",
+  "description": "Pommade chauffante pour soulager les douleurs musculaires et articulaires.",
+  "price": 37500,
+  "quantity": 50,
+  "brand": "Tiger Balm",
+  "category": ["69fb8f025bb0a27aaf83e3fa"],
+  "serialNumber": "TB-RED-001",
+  "characteristic": "Texture onctueuse, effet chauffant rapide",
+  "reduction": 0,
+  "tva": 20,
+  "active": true
+}
+
+###
+
+# Produit 2: Huile Essentielle
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Huile Essentielle Lavande Fine",
+  "description": "100% pure et naturelle, idéale pour la relaxation et le sommeil.",
+  "price": 26700,
+  "quantity": 100,
+  "brand": "Puressentiel",
+  "category": ["69f273e3aa5c3b3606759b45"],
+  "serialNumber": "HE-LAV-010",
+  "characteristic": "Bio, distillation à la vapeur d'eau",
+  "reduction": 5,
+  "tva": 20,
+  "active": true
+}
+
+###
+
+# Produit 3: Matériel Médical
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Tensiomètre Bras Electronique",
+  "description": "Appareil de mesure automatique de la tension artérielle au bras.",
+  "price": 135000,
+  "quantity": 15,
+  "brand": "Omron",
+  "category": ["69fb8f0b5bb0a27aaf83e3fc"],
+  "serialNumber": "OMR-M3-992",
+  "characteristic": "Écran LCD, mémoire 60 mesures, détection arythmie",
+  "reduction": 10,
+  "tva": 5.5,
+  "active": true
+}
+
+###
+
+# Produit 4: Hygiène
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Gel Hydroalcoolique 500ml",
+  "description": "Solution désinfectante pour les mains avec pompe doseuse.",
+  "price": 16500,
+  "quantity": 200,
+  "brand": "Anios",
+  "category": ["69fb8f0f5bb0a27aaf83e3fe"],
+  "serialNumber": "ANI-GEL-500",
+  "characteristic": "Sans rinçage, hypoallergénique",
+  "reduction": 0,
+  "tva": 5.5,
+  "active": true
+}
+
+###
+
+# Produit 5: Pommade
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Gel à l'Arnica",
+  "description": "Soin apaisant après un coup, une bosse ou une chute.",
+  "price": 21600,
+  "quantity": 80,
+  "brand": "Boiron",
+  "category": ["69fb8f025bb0a27aaf83e3fa"],
+  "serialNumber": "BOI-ARN-045",
+  "characteristic": "Non gras, pénétration rapide",
+  "reduction": 0,
+  "tva": 20,
+  "active": true
+}
+
+###
+
+# Produit 6: Huile Essentielle
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Huile Essentielle Arbre à Thé",
+  "description": "Antiseptique naturel puissant pour les imperfections cutanées.",
+  "price": 20400,
+  "quantity": 120,
+  "brand": "Pranarôm",
+  "category": ["69f273e3aa5c3b3606759b45"],
+  "serialNumber": "PRA-TT-010",
+  "characteristic": "Chémotypée, 100% intégrale",
+  "reduction": 0,
+  "tva": 20,
+  "active": true
+}
+
+###
+
+# Produit 7: Matériel Médical
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Thermomètre Infrarouge",
+  "description": "Mesure de la température frontale sans contact en 1 seconde.",
+  "price": 89700,
+  "quantity": 30,
+  "brand": "Beurer",
+  "category": ["69fb8f0b5bb0a27aaf83e3fc"],
+  "serialNumber": "BEU-FT-85",
+  "characteristic": "Distance 2-3cm, alerte fièvre sonore",
+  "reduction": 15,
+  "tva": 5.5,
+  "active": true
+}
+
+###
+
+# Produit 8: Complément Alimentaire
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Magnésium Marin + B6",
+  "description": "Aide à réduire la fatigue et favorise l'équilibre nerveux.",
+  "price": 43500,
+  "quantity": 60,
+  "brand": "Arkopharma",
+  "category": ["69fb8f145bb0a27aaf83e400"],
+  "serialNumber": "ARK-MAG-B6",
+  "characteristic": "Gélules végétales, cure de 30 jours",
+  "reduction": 0,
+  "tva": 5.5,
+  "active": true
+}
+
+###
+
+# Produit 9: Matériel Médical
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Oxymètre de Pouls",
+  "description": "Mesure la saturation en oxygène (SpO2) et le rythme cardiaque.",
+  "price": 66000,
+  "quantity": 25,
+  "brand": "Braun",
+  "category": ["69fb8f0b5bb0a27aaf83e3fc"],
+  "serialNumber": "BRA-OX-001",
+  "characteristic": "Clip doigt, arrêt automatique",
+  "reduction": 0,
+  "tva": 5.5,
+  "active": true
+}
+
+###
+
+# Produit 10: Soins (Hygiène & Soins)
+POST http://localhost:4001/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Crème Solaire SPF 50+",
+  "description": "Protection très haute pour peaux sensibles, résistante à l'eau.",
+  "price": 54600,
+  "quantity": 40,
+  "brand": "La Roche-Posay",
+  "category": ["69fb8f0f5bb0a27aaf83e3fe"],
+  "serialNumber": "LRP-SUN-50",
+  "characteristic": "Sans parfum, non comédogène",
+  "reduction": 2,
+  "tva": 20,
+  "active": true
+}

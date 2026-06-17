@@ -14,6 +14,15 @@ services:
     networks:
       - techcare_network
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: techcare_jaeger
+    ports:
+      - "16686:16686" # UI
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - techcare_network
+
   mongodb:
     image: mongo:latest
     container_name: techcare_mongodb
@@ -79,6 +88,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -99,6 +109,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -120,6 +131,7 @@ services:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - MONGODB_URI=${MONGODB_URI_PRODUCT_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -140,6 +152,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -160,6 +173,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -179,6 +193,7 @@ services:
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -199,6 +214,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -218,6 +234,7 @@ services:
       - AWS_REGION=${AWS_REGION}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
       - AWS_CLOUDFRONT_URL=${AWS_CLOUDFRONT_URL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
@@ -236,6 +253,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL_DOCKER}
       - RABBITMQ_URL=${RABBITMQ_URL_DOCKER}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
     networks:
       - techcare_network
 
